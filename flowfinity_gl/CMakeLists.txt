@@ -28,8 +28,7 @@ add_executable(${APP_EXE} src/main.cpp ${sources})
 # link libraries
 target_link_libraries(
   ${APP_EXE}
-  # TODO
-  # flowfinity_lib
+  flowfinity
   ${SDL2_LIBRARIES}
   ${OPENGL_LIBRARIES}
 )

@@ -9,8 +9,7 @@
 // folder).
 // - Introduction, links and more at the top of imgui.cpp
 
-// TODO
-// #include "flowfinity.h"
+#include "flowfinity.h"
 
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
@@ -140,9 +139,9 @@ int main(int, char **) {
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
   // test: run helloWorld
-  // TODO
-  // auto flowfinity = FlowFinity();
-  // flowfinity.helloWorld();
+  // TODO: delete this (just for testing)
+  auto flowfinity = FlowFinity();
+  flowfinity.helloWorld();
 
   // Main loop
   bool done = false;

@@ -4,4 +4,6 @@
 
 FlowFinity::FlowFinity() {}
 
+FlowFinity::~FlowFinity() {}
+
 void FlowFinity::helloWorld() { std::cout << "Hello, World!" << std::endl; }
