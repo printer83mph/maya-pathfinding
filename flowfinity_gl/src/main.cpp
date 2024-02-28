@@ -14,8 +14,10 @@
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
+#include <GL/glew.h>
 #include <SDL.h>
-#include <stdio.h>
+#include <iostream>
+
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
 #else
@@ -86,6 +88,15 @@ int main(int, char **) {
   SDL_GLContext gl_context = SDL_GL_CreateContext(window);
   SDL_GL_MakeCurrent(window, gl_context);
   SDL_GL_SetSwapInterval(1); // Enable vsync
+
+  GLenum err = glewInit();
+  if (err != GLEW_OK) {
+    std::cout << "Failed to init GLEW" << std::endl;
+    SDL_GL_DeleteContext(gl_context);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return 1;
+  }
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();

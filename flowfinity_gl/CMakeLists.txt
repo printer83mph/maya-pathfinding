@@ -6,9 +6,10 @@ project(flowfinity_gl)
 # Prereq libraries
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
 
 # normal source files
-file(GLOB sources src/*.cpp)
+file(GLOB_RECURSE sources src/*.cpp)
 
 # imgui source files
 set(IMGUI_DIR ${VENDOR_DIR}/imgui)
@@ -24,19 +25,21 @@ list(APPEND sources ${IMGUI_SOURCES})
 set(APP_EXE ${PROJECT_NAME})
 
 # main executable
-add_executable(${APP_EXE} src/main.cpp ${sources})
+add_executable(${APP_EXE} ${sources})
+# include dirs
+target_include_directories(
+  ${APP_EXE}
+  PRIVATE ${IMGUI_DIR}
+  PRIVATE ${IMGUI_DIR}/backends
+  PRIVATE ${SDL2_INCLUDE_DIR}
+  PRIVATE ${OPENGL_INCLUDE_DIR}
+  PRIVATE ${GLEW_INCLUDE_DIR}
+)
 # link libraries
 target_link_libraries(
   ${APP_EXE}
   flowfinity
   ${SDL2_LIBRARIES}
   ${OPENGL_LIBRARIES}
-)
-# include dirs
-target_include_directories(
-  ${APP_EXE}
-  PRIVATE ${IMGUI_DIR}
-  PRIVATE ${IMGUI_DIR}/backends
-  PRIVATE ${OPENGL_INCLUDE_DIR}
-  PRIVATE ${SDL2_INCLUDE_DIR}
+  GLEW::GLEW
 )
