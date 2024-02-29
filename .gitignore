@@ -14,7 +14,8 @@ _deps
 .cache
 
 # build
-build
+build/
+build_*/
 
 # imgui artifacts
 imgui.ini

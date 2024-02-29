@@ -23,13 +23,13 @@ file(
 )
 list(APPEND sources ${IMGUI_SOURCES})
 
-set(APP_EXE ${PROJECT_NAME})
+set(TARGET_NAME ${PROJECT_NAME})
 
 # main executable
-add_executable(${APP_EXE} ${sources})
+add_executable(${TARGET_NAME} ${sources})
 # include dirs
 target_include_directories(
-  ${APP_EXE}
+  ${TARGET_NAME}
   PRIVATE ${IMGUI_DIR}
   PRIVATE ${IMGUI_DIR}/backends
   PRIVATE ${SDL2_INCLUDE_DIR}
@@ -38,10 +38,12 @@ target_include_directories(
 )
 # link libraries
 target_link_libraries(
-  ${APP_EXE} PRIVATE
+  ${TARGET_NAME} PRIVATE
   flowfinity
   ${SDL2_LIBRARIES}
   ${OPENGL_LIBRARIES}
   GLEW::GLEW
   glm::glm
 )
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

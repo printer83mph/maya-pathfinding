@@ -11,6 +11,8 @@
 
 #include "flowfinity.h"
 
+#include "editor.h"
+
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_sdl2.h"
@@ -154,6 +156,9 @@ int main(int, char **) {
   auto flowfinity = FlowFinity();
   flowfinity.helloWorld();
 
+  Editor editor = Editor();
+  editor.initialize();
+
   // Main loop
   bool done = false;
 #ifdef __EMSCRIPTEN__
@@ -246,9 +251,9 @@ int main(int, char **) {
     // Rendering
     ImGui::Render();
     glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w,
-                 clear_color.z * clear_color.w, clear_color.w);
-    glClear(GL_COLOR_BUFFER_BIT);
+
+    editor.paint();
+
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     SDL_GL_SwapWindow(window);
   }

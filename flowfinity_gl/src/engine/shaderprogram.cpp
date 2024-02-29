@@ -2,9 +2,12 @@
 
 #include "glutil.h"
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+
+namespace fs = std::filesystem;
 
 ShaderProgram::Handles::Handles()
     : attr_pos(-1), attr_col(-1), unif_model(-1), unif_modelInvTr(-1),
@@ -18,11 +21,13 @@ void ShaderProgram::create(const char *vertFile, const char *fragFile) {
   m_vertShader = glCreateShader(GL_VERTEX_SHADER);
   m_fragShader = glCreateShader(GL_FRAGMENT_SHADER);
 
-  const char *vertSource = textFileRead(vertFile);
-  const char *fragSource = textFileRead(fragFile);
+  std::string vertSource = textFileRead(vertFile);
+  std::string fragSource = textFileRead(fragFile);
+  const char *vertSourceC = vertSource.c_str();
+  const char *fragSourceC = fragSource.c_str();
 
-  glShaderSource(m_vertShader, 1, &vertSource, 0);
-  glShaderSource(m_fragShader, 1, &fragSource, 0);
+  glShaderSource(m_vertShader, 1, &vertSourceC, 0);
+  glShaderSource(m_fragShader, 1, &fragSourceC, 0);
 
   glCompileShader(m_vertShader);
   glCompileShader(m_fragShader);
@@ -59,27 +64,37 @@ void ShaderProgram::draw(Drawable &drawable) {
   }
   useMe();
 
-  bind(drawable);
+  bindDrawable(drawable);
 
   // Bind the index buffer and then draw shapes from it.
   // This invokes the shader program, which accesses the vertex buffers.
   drawable.m_attributes.idx.bind();
   glDrawElements(drawable.drawMode(), drawable.elemCount(), GL_UNSIGNED_INT, 0);
 
-  unbind();
+  unbindDrawable();
 
   GLUtil::printGLErrorLog();
 }
 
 void ShaderProgram::setModelMatrix(const glm::mat4 &model) {
-  glUniformMatrix4fv(m_handles.unif_model, 1, GL_FALSE, &model[0][0]);
+  useMe();
+  if (m_handles.unif_model != -1) {
+    glUniformMatrix4fv(m_handles.unif_model, 1, GL_FALSE, &model[0][0]);
+  }
+  if (m_handles.unif_modelInvTr != -1) {
+    glm::mat4 modelInvTr = glm::inverse(glm::transpose(model));
+    glUniformMatrix4fv(m_handles.unif_model, 1, GL_FALSE, &modelInvTr[0][0]);
+  }
 }
 
-void ShaderProgram::setViewProjMatrix(const glm::mat4 &vp) {
-  glUniformMatrix4fv(m_handles.unif_viewProj, 1, GL_FALSE, &vp[0][0]);
+void ShaderProgram::setViewProjMatrix(const glm::mat4 &viewProj) {
+  useMe();
+  if (m_handles.unif_viewProj != -1) {
+    glUniformMatrix4fv(m_handles.unif_model, 1, GL_FALSE, &viewProj[0][0]);
+  }
 }
 
-void ShaderProgram::bind(Drawable &drawable) {
+void ShaderProgram::bindDrawable(Drawable &drawable) {
   // Each of the following blocks checks that:
   //   * This shader has this attribute, and
   //   * This Drawable has a vertex buffer for this attribute.
@@ -89,36 +104,33 @@ void ShaderProgram::bind(Drawable &drawable) {
   // vertex position, meaning that glVertexAttribPointer associates vs_Pos
   // (referred to by attr_pos) with that VBO
 
-  if (m_handles.attr_pos != -1 && drawable.m_attributes.pos.bind()) {
+  if (m_handles.attr_pos != -1 && drawable.m_attributes.pos.tryBind()) {
     glEnableVertexAttribArray(m_handles.attr_pos);
     glVertexAttribPointer(m_handles.attr_pos, 4, GL_FLOAT, false, 0, nullptr);
   }
-  if (m_handles.attr_col != -1 && drawable.m_attributes.col.bind()) {
+  if (m_handles.attr_col != -1 && drawable.m_attributes.col.tryBind()) {
     glEnableVertexAttribArray(m_handles.attr_col);
     glVertexAttribPointer(m_handles.attr_col, 4, GL_FLOAT, false, 0, nullptr);
   }
 }
 
-void ShaderProgram::unbind() {
+void ShaderProgram::unbindDrawable() {
   if (m_handles.attr_pos != -1)
     glDisableVertexAttribArray(m_handles.attr_pos);
   if (m_handles.attr_col != -1)
     glDisableVertexAttribArray(m_handles.attr_col);
 }
 
-char *ShaderProgram::textFileRead(const char *filename) {
-  std::ifstream file(filename);
+std::string ShaderProgram::textFileRead(const char *filename) {
+  fs::path path = fs::current_path() / "resources/glsl" / filename;
+
+  std::ifstream file(path);
   if (file.fail()) {
-    std::cerr << "Failed to open file: " << filename << std::endl;
+    std::cerr << "Failed to open file: " << path << std::endl;
     return nullptr;
   }
 
   std::stringstream buffer;
   buffer << file.rdbuf();
-  std::string contents = buffer.str();
-
-  char *cstr = new char[contents.length() + 1];
-  std::strcpy(cstr, contents.c_str());
-
-  return cstr;
+  return buffer.str();
 }

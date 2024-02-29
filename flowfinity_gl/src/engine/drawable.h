@@ -14,9 +14,10 @@ class Drawable {
     AttributeRef(GLenum type);
     ~AttributeRef();
 
-    inline bool bind() {
+    inline void bind() { glBindBuffer(m_type, m_buffer); }
+    inline bool tryBind() {
       if (m_isBound)
-        glBindBuffer(m_type, m_buffer);
+        bind();
       return m_isBound;
     }
     inline void generate() {

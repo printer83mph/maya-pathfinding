@@ -1,8 +1,10 @@
 #pragma once
 
-#include "GL/glew.h"
 #include "drawable.h"
+
+#include <GL/glew.h>
 #include <glm/mat4x4.hpp>
+#include <string>
 
 class ShaderProgram {
   struct Handles {
@@ -45,9 +47,9 @@ public:
 
 private:
   // Utility functions used by draw()
-  void bind(Drawable &drawable);
-  void unbind();
+  void bindDrawable(Drawable &drawable);
+  void unbindDrawable();
 
   // Utility function used in create()
-  char *textFileRead(const char *);
+  std::string textFileRead(const char *);
 };
