@@ -91,7 +91,7 @@ void ShaderProgram::setModelMatrix(const glm::mat4 &model) {
 void ShaderProgram::setViewProjMatrix(const glm::mat4 &viewProj) {
   useMe();
   if (m_handles.unif_viewProj != -1) {
-    glUniformMatrix4fv(m_handles.unif_model, 1, GL_FALSE, &viewProj[0][0]);
+    glUniformMatrix4fv(m_handles.unif_viewProj, 1, GL_FALSE, &viewProj[0][0]);
   }
 }
 

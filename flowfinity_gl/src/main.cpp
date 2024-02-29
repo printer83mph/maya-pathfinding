@@ -176,6 +176,11 @@ int main(int, char **) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       ImGui_ImplSDL2_ProcessEvent(&event);
+
+      // run event thru our own editor
+      if (!io.WantCaptureMouse && !io.WantCaptureKeyboard)
+        editor.processEvent(event);
+
       if (event.type == SDL_QUIT)
         done = true;
       if (event.type == SDL_WINDOWEVENT &&

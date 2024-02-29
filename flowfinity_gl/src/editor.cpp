@@ -1,14 +1,15 @@
 #include "editor.h"
 
-#include "engine/scene/square.h"
-#include "engine/shaderprogram.h"
-
 #include <SDL.h>
+#include <SDL_events.h>
+#include <SDL_keycode.h>
+#include <SDL_mouse.h>
+#include <SDL_video.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
 
-Editor::Editor() : m_square(), m_prog_flat() {}
+Editor::Editor() : m_square(), m_prog_flat(), m_camera() {}
 
 Editor::~Editor() {
   glDeleteVertexArrays(1, &vao);
@@ -16,6 +17,11 @@ Editor::~Editor() {
 }
 
 int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
+  mp_window = window;
+
+  SDL_GL_GetDrawableSize(window, &m_width, &m_height);
+  m_camera = Camera(m_width, m_height);
+
   GLenum err = glewInit();
   if (err != GLEW_OK) {
     std::cout << "Failed to init GLEW" << std::endl;
@@ -51,12 +57,34 @@ int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
 }
 
 void Editor::paint() {
-  m_prog_flat.setModelMatrix(glm::mat4(1));
-  m_prog_flat.setViewProjMatrix(
-      glm::perspective<float>(45., 1., 0.01, 100.) *
-      glm::translate(glm::mat4(), glm::vec3({0., 0., -5.})));
+  m_prog_flat.setModelMatrix(glm::mat4(1.f));
+  m_prog_flat.setViewProjMatrix(m_camera.getViewProj());
+
+  SDL_GL_GetDrawableSize(mp_window, &m_width, &m_height);
+  m_camera.width = m_width;
+  m_camera.height = m_height;
+  glViewport(0, 0, m_width, m_height);
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   m_prog_flat.draw(m_square);
+}
+
+void Editor::processEvent(const SDL_Event &event) {
+  switch (event.type) {
+  case SDL_MOUSEMOTION:
+    if (event.motion.state & SDL_BUTTON_LMASK) {
+      m_camera.RotateAboutUp(-event.motion.xrel * 0.25);
+      m_camera.RotateAboutRight(-event.motion.yrel * 0.25);
+      m_camera.RecomputeAttributes();
+    } else if (event.motion.state & SDL_BUTTON_RMASK) {
+      m_camera.ScaleZoom(1. + event.motion.yrel * 0.005);
+      m_camera.RecomputeAttributes();
+    }
+    break;
+  case SDL_MOUSEWHEEL:
+    m_camera.ScaleZoom(1. + event.wheel.y * 0.025);
+    m_camera.RecomputeAttributes();
+    break;
+  }
 }
