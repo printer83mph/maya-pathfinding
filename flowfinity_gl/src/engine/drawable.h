@@ -2,24 +2,42 @@
 
 #include <GL/glew.h>
 
-#define GL_ATTRIBUTE_DEF(name, type)                                           \
-protected:                                                                     \
-  GLuint buf_##name;                                                           \
-  bool name##_bound;                                                           \
-                                                                               \
-public:                                                                        \
-  inline bool bind_##name() {                                                  \
-    if (name##_bound) {                                                        \
-      glBindBuffer(type, buf_##name);                                          \
-    }                                                                          \
-    return name##_bound;                                                       \
-  }                                                                            \
-  inline void generate_##name() {                                              \
-    name##_bound = true;                                                       \
-    glGenBuffers(1, &buf_##name);                                              \
-  }
-
 class Drawable {
+  class AttributeRef {
+  private:
+    GLuint m_buffer;
+    bool m_isBound;
+    // type of VBO – i.e. GL_ARRAY_BUFFER
+    GLenum m_type;
+
+  public:
+    AttributeRef(GLenum type);
+    ~AttributeRef();
+
+    inline bool bind() {
+      if (m_isBound)
+        glBindBuffer(m_type, m_buffer);
+      return m_isBound;
+    }
+    inline void generate() {
+      m_isBound = true;
+      glGenBuffers(1, &m_buffer);
+    }
+    inline void destroy() {
+      m_isBound = false;
+      glDeleteBuffers(1, &m_buffer);
+    }
+  };
+
+  struct Attributes {
+    AttributeRef idx;
+    AttributeRef pos;
+    AttributeRef col;
+
+  public:
+    Attributes();
+  };
+
 protected:
   int m_count;
 
@@ -30,11 +48,8 @@ public:
   virtual void create() = 0;
   void destroy();
 
-  virtual GLenum draw_mode();
-  int elem_count();
+  virtual GLenum drawMode();
+  int elemCount();
 
-  // MAKE SURE TO ADD ATTR's TO CONSTRUCTOR & DESTROY FN's
-  GL_ATTRIBUTE_DEF(idx, GL_ELEMENT_ARRAY_BUFFER)
-  GL_ATTRIBUTE_DEF(pos, GL_ARRAY_BUFFER)
-  GL_ATTRIBUTE_DEF(col, GL_ARRAY_BUFFER)
+  Attributes m_attributes;
 };

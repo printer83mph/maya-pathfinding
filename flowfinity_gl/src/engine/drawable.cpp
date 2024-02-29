@@ -1,16 +1,23 @@
 #include "drawable.h"
 
-Drawable::Drawable() : m_count(-1), buf_idx(), buf_col(), buf_pos() {}
+Drawable::AttributeRef::AttributeRef(GLenum type) : m_type(type), m_buffer() {}
+Drawable::AttributeRef::~AttributeRef() {}
+
+Drawable::Attributes::Attributes()
+    : idx(GL_ELEMENT_ARRAY_BUFFER), pos(GL_ARRAY_BUFFER), col(GL_ARRAY_BUFFER) {
+}
+
+Drawable::Drawable() : m_count(-1), m_attributes() {}
 
 Drawable::~Drawable() {}
 
 void Drawable::destroy() {
-  glDeleteBuffers(1, &buf_idx);
-  glDeleteBuffers(1, &buf_pos);
-  glDeleteBuffers(1, &buf_col);
+  m_attributes.idx.destroy();
+  m_attributes.pos.destroy();
+  m_attributes.col.destroy();
 }
 
 // default draw mode is `GL_TRIANGLES`
-GLenum Drawable::draw_mode() { return GL_TRIANGLES; }
+GLenum Drawable::drawMode() { return GL_TRIANGLES; }
 
-int Drawable::elem_count() { return m_count; }
+int Drawable::elemCount() { return m_count; }

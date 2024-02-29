@@ -7,6 +7,7 @@ project(flowfinity_gl)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 # normal source files
 file(GLOB_RECURSE sources src/*.cpp)
@@ -37,9 +38,10 @@ target_include_directories(
 )
 # link libraries
 target_link_libraries(
-  ${APP_EXE}
+  ${APP_EXE} PRIVATE
   flowfinity
   ${SDL2_LIBRARIES}
   ${OPENGL_LIBRARIES}
   GLEW::GLEW
+  glm::glm
 )
