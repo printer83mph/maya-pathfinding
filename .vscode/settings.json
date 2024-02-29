@@ -1,0 +1,6 @@
+{
+  "cmake.configureArgs": [
+    // allow for clangd analysis
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+  ]
+}
