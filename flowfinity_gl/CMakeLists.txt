@@ -46,4 +46,9 @@ target_link_libraries(
   glm::glm
 )
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+add_custom_command(
+  TARGET ${TARGET_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources
+  $<TARGET_FILE_DIR:${TARGET_NAME}>/resources
+)

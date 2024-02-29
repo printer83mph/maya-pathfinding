@@ -18,7 +18,6 @@
 #include "imgui_impl_sdl2.h"
 #include <GL/glew.h>
 #include <SDL.h>
-#include <iostream>
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
@@ -91,15 +90,6 @@ int main(int, char **) {
   SDL_GL_MakeCurrent(window, gl_context);
   SDL_GL_SetSwapInterval(1); // Enable vsync
 
-  GLenum err = glewInit();
-  if (err != GLEW_OK) {
-    std::cout << "Failed to init GLEW" << std::endl;
-    SDL_GL_DeleteContext(gl_context);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-    return 1;
-  }
-
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -157,7 +147,10 @@ int main(int, char **) {
   flowfinity.helloWorld();
 
   Editor editor = Editor();
-  editor.initialize();
+  int success = editor.initialize(window, gl_context);
+  if (success != 0) {
+    return success;
+  }
 
   // Main loop
   bool done = false;

@@ -10,10 +10,10 @@ out vec3 fs_Pos;
 out vec4 fs_Col;
 
 void main() {
-  fs_Pos = vs_Pos.xyz;
   fs_Col = vs_Col;
   
   vec4 modelposition = u_Model * vs_Pos;
+  fs_Pos = modelposition.xyz;
 
   gl_Position = u_ViewProj * modelposition;
 }

@@ -56,6 +56,7 @@ void ShaderProgram::create(const char *vertFile, const char *fragFile) {
 void ShaderProgram::useMe() { glUseProgram(m_prog); }
 
 void ShaderProgram::draw(Drawable &drawable) {
+  GLUtil::printGLErrorLog();
   if (drawable.elemCount() < 0) {
     throw std::invalid_argument(
         "Attempting to draw a Drawable that has not initialized its count "
