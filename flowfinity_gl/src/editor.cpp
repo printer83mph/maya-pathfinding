@@ -83,7 +83,7 @@ void Editor::processEvent(const SDL_Event &event) {
     }
     break;
   case SDL_MOUSEWHEEL:
-    m_camera.ScaleZoom(1. + event.wheel.y * 0.025);
+    m_camera.ScaleZoom(1. - event.wheel.y * 0.1);
     m_camera.RecomputeAttributes();
     break;
   }

@@ -1,19 +1,11 @@
-cmake_minimum_required(VERSION 3.24)
-set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_PARALLEL_LEVEL 3)
-project(flowfinity_gl)
 
-# Prereq libraries
-find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(glm CONFIG REQUIRED)
-
-# normal source files
-file(GLOB_RECURSE sources src/*.cpp)
+find_package(SDL2 REQUIRED)
 
 # imgui source files
-set(IMGUI_DIR ${VENDOR_DIR}/imgui)
+set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/extern/imgui)
 file(
   GLOB IMGUI_SOURCES
   ${IMGUI_DIR}/*.cpp
@@ -21,34 +13,36 @@ file(
   ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
   ${IMGUI_DIR}/misc/cpp/imgui_stdlib.cpp # for using std::string
 )
-list(APPEND sources ${IMGUI_SOURCES})
-
-set(TARGET_NAME ${PROJECT_NAME})
 
 # main executable
-add_executable(${TARGET_NAME} ${sources})
+add_executable(flowfinityGl)
+# source files
+add_subdirectory(src)
+target_sources(flowfinityGl PRIVATE ${IMGUI_SOURCES})
 # include dirs
-target_include_directories(
-  ${TARGET_NAME}
-  PRIVATE ${IMGUI_DIR}
-  PRIVATE ${IMGUI_DIR}/backends
-  PRIVATE ${SDL2_INCLUDE_DIR}
-  PRIVATE ${OPENGL_INCLUDE_DIR}
-  PRIVATE ${GLEW_INCLUDE_DIR}
+
+target_include_directories(flowfinityGl PRIVATE
+  ${IMGUI_DIR}
+  ${IMGUI_DIR}/backends
+  ${SDL2_INCLUDE_DIRS}
+  ${GLEW_INCLUDE_DIRS}
+  ${OPENGL_INCLUDE_DIRS}
 )
+
+message(DEBUG "glew include dirs:")
+
 # link libraries
-target_link_libraries(
-  ${TARGET_NAME} PRIVATE
+target_link_libraries(flowfinityGl PRIVATE
   flowfinity
   ${SDL2_LIBRARIES}
+  ${GLEW_LIBRARIES}
   ${OPENGL_LIBRARIES}
-  GLEW::GLEW
   glm::glm
 )
 
-add_custom_command(
-  TARGET ${TARGET_NAME} POST_BUILD
+
+add_custom_command(TARGET flowfinityGl POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
   ${CMAKE_CURRENT_SOURCE_DIR}/resources
-  $<TARGET_FILE_DIR:${TARGET_NAME}>/resources
+  $<TARGET_FILE_DIR:flowfinityGl>/resources
 )

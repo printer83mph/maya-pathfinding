@@ -8,7 +8,7 @@ This plugin allows...
 Dependencies:
 
 - SDL2
-- OpenGL
+- GLEW
 
 This project uses git submodules. To download these after cloning, run:
 
