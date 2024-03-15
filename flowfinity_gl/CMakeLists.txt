@@ -29,13 +29,11 @@ target_include_directories(flowfinityGl PRIVATE
   ${OPENGL_INCLUDE_DIRS}
 )
 
-message(DEBUG "glew include dirs:")
-
 # link libraries
 target_link_libraries(flowfinityGl PRIVATE
   flowfinity
   ${SDL2_LIBRARIES}
-  ${GLEW_LIBRARIES}
+  GLEW::GLEW
   ${OPENGL_LIBRARIES}
   glm::glm
 )

@@ -4,6 +4,8 @@ if(${CMAKE_VERSION} VERSION_LESS 3.12)
     cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
 endif()
 
+set(CMAKE_CXX_STANDARD 17)
+
 project(maya_pathfinding VERSION 1.0
                          DESCRIPTION "A parallelized pathfinding plugin for Maya"
                          LANGUAGES CXX)
