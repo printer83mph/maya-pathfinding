@@ -1,6 +1,7 @@
 #include "drawable.h"
 
-Drawable::AttributeRef::AttributeRef(GLenum type) : m_type(type), m_buffer(), m_isBound(false) {}
+Drawable::AttributeRef::AttributeRef(GLenum type)
+    : m_type(type), m_buffer(), m_isBound(false) {}
 Drawable::AttributeRef::~AttributeRef() {}
 
 Drawable::Attributes::Attributes()

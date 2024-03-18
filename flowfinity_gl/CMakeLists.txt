@@ -25,6 +25,7 @@ target_include_directories(flowfinityGl PRIVATE
   ${IMGUI_DIR}/backends
   ${SDL2_INCLUDE_DIRS}
   ${GLEW_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}/extern/glew
   ${OPENGL_INCLUDE_DIRS}
 )
 
