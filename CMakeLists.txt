@@ -35,5 +35,3 @@ add_subdirectory(extern/glm)
 # Backend logic
 add_subdirectory(flowfinity)
 add_subdirectory(flowfinity_gl)
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

@@ -1,5 +1,3 @@
-set(CMAKE_BUILD_PARALLEL_LEVEL 3)
-
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(SDL2 REQUIRED)
@@ -16,11 +14,12 @@ file(
 
 # main executable
 add_executable(flowfinityGl)
+
 # source files
 add_subdirectory(src)
 target_sources(flowfinityGl PRIVATE ${IMGUI_SOURCES})
-# include dirs
 
+# include dirs
 target_include_directories(flowfinityGl PRIVATE
   ${IMGUI_DIR}
   ${IMGUI_DIR}/backends
@@ -33,11 +32,10 @@ target_include_directories(flowfinityGl PRIVATE
 target_link_libraries(flowfinityGl PRIVATE
   flowfinity
   ${SDL2_LIBRARIES}
-  GLEW::GLEW
+  GLEW::glew
   ${OPENGL_LIBRARIES}
   glm::glm
 )
-
 
 add_custom_command(TARGET flowfinityGl POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
