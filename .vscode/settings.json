@@ -1,8 +1,5 @@
 {
-  "cmake.configureArgs": [
-    // allow for clangd analysis
-    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-  ],
   "cmake.automaticReconfigure": false,
-  "cmake.configureOnEdit": false
+  "cmake.configureOnOpen": false,
+  "cmake.configureOnEdit": false,
 }

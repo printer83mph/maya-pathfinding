@@ -1,0 +1,13 @@
+{
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Launch FlowfinityGL (Debug)",
+      "program": "${workspaceFolder}/build/flowfinity_gl/flowfinityGl",
+      "args": [],
+      "cwd": "${workspaceFolder}/build/flowfinity_gl",
+      "preLaunchTask": "CMake: build"
+    }
+  ]
+}

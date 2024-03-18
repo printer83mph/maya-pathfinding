@@ -19,3 +19,10 @@ build_*/
 
 # imgui artifacts
 imgui.ini
+
+# vscode
+.vscode
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
