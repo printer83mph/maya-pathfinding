@@ -7,4 +7,9 @@ set(HEADERS
 )
 
 add_library(flowfinity STATIC ${SOURCES} ${HEADERS})
-target_include_directories(flowfinity PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(flowfinity PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(flowfinity PRIVATE
+  glm::glm
+)
