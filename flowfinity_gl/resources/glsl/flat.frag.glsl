@@ -7,5 +7,5 @@ out vec4 out_Col;
 
 void main()
 {
-    out_Col = (fs_Nor + vec4(1.0))/2.0;
+    out_Col = fs_Col;
 }
