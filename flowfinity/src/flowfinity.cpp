@@ -17,7 +17,7 @@ void FlowFinity::addAgent(float x, float y) {
 
 void FlowFinity::addAgent(const glm::vec2 &pos) { addAgent(pos.x, pos.y); }
 
-void FlowFinity::removeAgent(uint index) {
+void FlowFinity::removeAgent(size_t index) {
   if (index >= m_pos.size()) {
     throw "index out of bounds lol";
   }

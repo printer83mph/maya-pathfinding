@@ -8,11 +8,11 @@ Square::Square() : Drawable() {}
 Square::~Square() {}
 
 void Square::create() {
-  std::vector<glm::vec4> pos{glm::vec4(-2, -2, 0, 1), glm::vec4(2, -2, 0, 1),
-                             glm::vec4(2, 2, 0, 1), glm::vec4(-2, 2, 0, 1)};
+  std::vector<glm::vec4> pos{glm::vec4(-1, -1, 0, 1), glm::vec4(1, -1, 0, 1),
+                             glm::vec4(1, 1, 0, 1), glm::vec4(-1, 1, 0, 1)};
 
-  std::vector<glm::vec4> col{glm::vec4(1, 0, 0, 1), glm::vec4(0, 1, 0, 1),
-                             glm::vec4(0, 0, 1, 1), glm::vec4(1, 1, 0, 1)};
+  std::vector<glm::vec4> col{glm::vec4(0, 0.6, 0, 1), glm::vec4(0, 0.6, 0, 1),
+                             glm::vec4(0, 0.6, 0, 1), glm::vec4(0, 0.6, 0, 1)};
 
   std::vector<GLuint> idx{0, 1, 2, 0, 2, 3};
 
