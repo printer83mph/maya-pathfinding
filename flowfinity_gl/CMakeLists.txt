@@ -37,8 +37,5 @@ target_link_libraries(flowfinityGl PRIVATE
   glm::glm
 )
 
-add_custom_command(TARGET flowfinityGl POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources
-  $<TARGET_FILE_DIR:flowfinityGl>/resources
-)
+# copy resources to build dir
+add_subdirectory(resources)
