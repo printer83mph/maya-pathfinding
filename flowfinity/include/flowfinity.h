@@ -20,5 +20,5 @@ private:
 
   void addAgent(float x, float y);
   void addAgent(const glm::vec2 &pos);
-  void removeAgent(uint index);
+  void removeAgent(size_t index);
 };
