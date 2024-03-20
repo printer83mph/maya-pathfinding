@@ -14,7 +14,8 @@ class ShaderProgram {
     int attr_pos;
     // in vec4 => vertex color
     int attr_col;
-
+    // in vec4 => vertex normal
+    int attr_nor;
     // uniform mat4 => model matrix
     int unif_model;
     // uniform mat4 => inverse transpose model matrix

@@ -10,8 +10,8 @@
 namespace fs = std::filesystem;
 
 ShaderProgram::Handles::Handles()
-    : attr_pos(-1), attr_col(-1), unif_model(-1), unif_modelInvTr(-1),
-      unif_viewProj(-1) {}
+    : attr_pos(-1), attr_col(-1), attr_nor(-1), unif_model(-1),
+      unif_modelInvTr(-1), unif_viewProj(-1) {}
 
 ShaderProgram::ShaderProgram()
     : m_vertShader(0), m_fragShader(0), m_prog(0), m_handles() {}
@@ -46,6 +46,7 @@ void ShaderProgram::create(const char *vertFile, const char *fragFile) {
   // Get the locations of the attributes in the shader program
   m_handles.attr_pos = glGetAttribLocation(m_prog, "vs_Pos");
   m_handles.attr_col = glGetAttribLocation(m_prog, "vs_Col");
+  m_handles.attr_nor = glGetAttribLocation(m_prog, "vs_Nor");
 
   // Gets uniform locations in shader program
   m_handles.unif_model = glGetUniformLocation(m_prog, "u_Model");
@@ -113,6 +114,10 @@ void ShaderProgram::bindDrawable(Drawable &drawable) {
     glEnableVertexAttribArray(m_handles.attr_col);
     glVertexAttribPointer(m_handles.attr_col, 4, GL_FLOAT, false, 0, nullptr);
   }
+  if (m_handles.attr_nor != -1 && drawable.m_attributes.nor.tryBind()) {
+    glEnableVertexAttribArray(m_handles.attr_nor);
+    glVertexAttribPointer(m_handles.attr_nor, 4, GL_FLOAT, false, 0, nullptr);
+  }
 }
 
 void ShaderProgram::unbindDrawable() {
@@ -120,6 +125,8 @@ void ShaderProgram::unbindDrawable() {
     glDisableVertexAttribArray(m_handles.attr_pos);
   if (m_handles.attr_col != -1)
     glDisableVertexAttribArray(m_handles.attr_col);
+  if (m_handles.attr_nor != -1)
+    glDisableVertexAttribArray(m_handles.attr_nor);
 }
 
 std::string ShaderProgram::textFileRead(const char *filename) {
