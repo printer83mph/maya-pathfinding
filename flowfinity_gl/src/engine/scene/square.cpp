@@ -11,8 +11,8 @@ void Square::create() {
   std::vector<glm::vec4> pos{glm::vec4(-1, -1, 0, 1), glm::vec4(1, -1, 0, 1),
                              glm::vec4(1, 1, 0, 1), glm::vec4(-1, 1, 0, 1)};
 
-  std::vector<glm::vec4> col{glm::vec4(0, 0.6, 0, 1), glm::vec4(0, 0.6, 0, 1),
-                             glm::vec4(0, 0.6, 0, 1), glm::vec4(0, 0.6, 0, 1)};
+  std::vector<glm::vec4> col{glm::vec4(0, 0.6, 0, 1), glm::vec4(0, 0.5, 0, 1),
+                             glm::vec4(0, 0.6, 0, 1), glm::vec4(0, 0.4, 0, 1)};
 
   std::vector<GLuint> idx{0, 1, 2, 0, 2, 3};
 
