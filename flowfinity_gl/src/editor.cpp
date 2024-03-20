@@ -12,7 +12,8 @@
 
 #include <iostream>
 
-Editor::Editor() : m_square(), m_cube(), m_prog_flat(), m_camera() {}
+Editor::Editor()
+    : m_square(), m_cube(), m_prog_flat(), m_prog_lambert(), m_camera() {}
 
 Editor::~Editor() {
   glDeleteVertexArrays(1, &vao);
@@ -52,6 +53,7 @@ int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
   m_square.create();
   m_cube.create();
   m_prog_flat.create("passthrough.vert.glsl", "flat.frag.glsl");
+  m_prog_lambert.create("passthrough.vert.glsl", "lambert.frag.glsl");
 
   // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
   // using multiple VAOs, we can just bind one once.
@@ -63,6 +65,10 @@ int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
 void Editor::paint() {
   m_prog_flat.setModelMatrix(glm::mat4(1.f));
   m_prog_flat.setViewProjMatrix(m_camera.getViewProj());
+
+  m_prog_lambert.setCamPos(m_camera.eye);
+  m_prog_lambert.setModelMatrix(glm::mat4(1.f));
+  m_prog_lambert.setViewProjMatrix(m_camera.getViewProj());
 
   SDL_GL_GetDrawableSize(mp_window, &m_width, &m_height);
   m_camera.width = m_width;
@@ -76,9 +82,9 @@ void Editor::paint() {
                  glm::vec3(10, 10, 0)));
   m_prog_flat.draw(m_square);
 
-  m_prog_flat.setModelMatrix(
+  m_prog_lambert.setModelMatrix(
       glm::translate(glm::mat4(1.0f), glm::vec3(0, 1.f, 0)));
-  m_prog_flat.draw(m_cube);
+  m_prog_lambert.draw(m_cube);
 }
 
 void Editor::processEvent(const SDL_Event &event) {

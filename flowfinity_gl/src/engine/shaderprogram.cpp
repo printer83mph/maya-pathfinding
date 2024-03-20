@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 
 ShaderProgram::Handles::Handles()
     : attr_pos(-1), attr_col(-1), attr_nor(-1), unif_model(-1),
-      unif_modelInvTr(-1), unif_viewProj(-1) {}
+      unif_modelInvTr(-1), unif_viewProj(-1), unif_camPos(-1) {}
 
 ShaderProgram::ShaderProgram()
     : m_vertShader(0), m_fragShader(0), m_prog(0), m_handles() {}
@@ -52,6 +52,7 @@ void ShaderProgram::create(const char *vertFile, const char *fragFile) {
   m_handles.unif_model = glGetUniformLocation(m_prog, "u_Model");
   m_handles.unif_modelInvTr = glGetUniformLocation(m_prog, "u_ModelInvTr");
   m_handles.unif_viewProj = glGetUniformLocation(m_prog, "u_ViewProj");
+  m_handles.unif_camPos = glGetUniformLocation(m_prog, "u_CamPos");
 }
 
 void ShaderProgram::useMe() { glUseProgram(m_prog); }
@@ -84,8 +85,9 @@ void ShaderProgram::setModelMatrix(const glm::mat4 &model) {
     glUniformMatrix4fv(m_handles.unif_model, 1, GL_FALSE, &model[0][0]);
   }
   if (m_handles.unif_modelInvTr != -1) {
-    glm::mat4 modelInvTr = glm::inverse(glm::transpose(model));
-    glUniformMatrix4fv(m_handles.unif_model, 1, GL_FALSE, &modelInvTr[0][0]);
+    glm::mat3 modelInvTr = glm::inverse(glm::transpose(glm::mat3(model)));
+    glUniformMatrix3fv(m_handles.unif_modelInvTr, 1, GL_FALSE,
+                       &modelInvTr[0][0]);
   }
 }
 
@@ -93,6 +95,13 @@ void ShaderProgram::setViewProjMatrix(const glm::mat4 &viewProj) {
   useMe();
   if (m_handles.unif_viewProj != -1) {
     glUniformMatrix4fv(m_handles.unif_viewProj, 1, GL_FALSE, &viewProj[0][0]);
+  }
+}
+
+void ShaderProgram::setCamPos(const glm::vec3 &cp) {
+  useMe();
+  if (m_handles.unif_camPos != -1) {
+    glUniform3fv(m_handles.unif_camPos, 1, &cp[0]);
   }
 }
 

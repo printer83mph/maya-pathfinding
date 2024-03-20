@@ -22,6 +22,8 @@ class ShaderProgram {
     int unif_modelInvTr;
     // uniform mat4 => combined projection and view matrices
     int unif_viewProj;
+    // uniform vec3 => camera position
+    int unif_camPos;
   };
 
 public:
@@ -45,6 +47,8 @@ public:
   void setModelMatrix(const glm::mat4 &model);
   // Pass Projection * View matrix to this shader on the GPU
   void setViewProjMatrix(const glm::mat4 &vp);
+  // Pass camera position to this shader on the GPU
+  void setCamPos(const glm::vec3 &cp);
 
 private:
   // Utility functions used by draw()
