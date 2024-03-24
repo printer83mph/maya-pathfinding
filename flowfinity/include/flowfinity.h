@@ -15,10 +15,12 @@ public:
   void performTimeStep(float dt);
 
 private:
-  std::vector<glm::vec2> m_pos;
-  std::vector<glm::vec2> m_vel;
+  std::vector<glm::vec2> m_rvoPos;
+  std::vector<glm::vec2> m_rvoVel;
+  std::vector<unsigned int> m_rvoTarget;
 
-  void addAgent(float x, float y);
-  void addAgent(const glm::vec2 &pos);
+  std::vector<glm::vec2> m_targets;
+
+  void addAgent(const glm::vec2 &pos, unsigned int target = 0);
   void removeAgent(unsigned int index);
 };

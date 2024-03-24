@@ -2,7 +2,8 @@
 
 #include <iterator>
 
-FlowFinity::FlowFinity() : m_pos(), m_vel() {}
+FlowFinity::FlowFinity()
+    : m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_targets({glm::vec2(3, 2)}) {}
 
 FlowFinity::~FlowFinity() {}
 
@@ -10,17 +11,17 @@ void FlowFinity::performTimeStep(float dt) {
   // TODO
 }
 
-void FlowFinity::addAgent(float x, float y) {
-  m_pos.push_back(glm::vec2(x, y));
-  m_vel.push_back(glm::vec2(0, 0));
+void FlowFinity::addAgent(const glm::vec2 &pos, unsigned int target) {
+  m_rvoPos.push_back(pos);
+  m_rvoVel.push_back(glm::vec2(0, 0));
+  m_rvoTarget.push_back(target);
 }
 
-void FlowFinity::addAgent(const glm::vec2 &pos) { addAgent(pos.x, pos.y); }
-
 void FlowFinity::removeAgent(unsigned int index) {
-  if (index >= m_pos.size()) {
+  if (index >= m_rvoPos.size()) {
     throw "index out of bounds lol";
   }
-  m_pos.erase(std::next(m_pos.begin(), index));
-  m_vel.erase(std::next(m_vel.begin(), index));
+  m_rvoPos.erase(std::next(m_rvoPos.begin(), index));
+  m_rvoVel.erase(std::next(m_rvoVel.begin(), index));
+  m_rvoTarget.erase(std::next(m_rvoTarget.begin(), index));
 }
