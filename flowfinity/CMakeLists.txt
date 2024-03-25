@@ -1,9 +1,11 @@
 set(SOURCES
   "src/flowfinity.cpp"
+  "src/rvo.cpp"
 )
 
 set(HEADERS
   "include/flowfinity.h"
+  "include/rvo.h"
 )
 
 add_library(flowfinity STATIC ${SOURCES} ${HEADERS})

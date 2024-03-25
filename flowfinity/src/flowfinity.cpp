@@ -3,7 +3,7 @@
 #include <iterator>
 
 FlowFinity::FlowFinity()
-    : m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_targets({glm::vec2(3, 2)}) {}
+    : m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_locations({glm::vec2(3, 2)}) {}
 
 FlowFinity::~FlowFinity() {}
 
