@@ -6,11 +6,14 @@
 VelocityObstacle::VelocityObstacle(const glm::vec2 &pA, const glm::vec2 &vA,
                                    const glm::vec2 &pB, const glm::vec2 &vB,
                                    float radiusA, float radiusB)
-    : m_posA(pA), m_velA(vA), m_origin(pA + vB), m_ray(glm::normalize(pB - pA)),
-      m_halfConeAngle(glm::asin((radiusA + radiusB) / glm::length(pB - pA))) {}
+    : m_posA(pA), m_velA(vA), m_rayOrigin(pA + vB),
+      m_rayDir(glm::normalize(pB - pA)),
+      m_halfConeAngle(
+          // TODO: figure out why we have to double this
+          glm::asin((radiusA + radiusB) * 2 / glm::length(pB - pA))) {}
 
 bool VelocityObstacle::isInVO(const glm::vec2 &newVelA) const {
-  return glm::dot(glm::normalize(m_posA + newVelA - m_origin), m_ray) >
+  return glm::dot(glm::normalize(m_posA + newVelA - m_rayOrigin), m_rayDir) >
          glm::cos(m_halfConeAngle);
 }
 

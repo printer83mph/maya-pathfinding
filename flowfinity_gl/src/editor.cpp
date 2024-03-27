@@ -1,4 +1,5 @@
 #include "editor.h"
+#include "glm/gtc/constants.hpp"
 
 #include <SDL.h>
 #include <SDL_events.h>
@@ -9,7 +10,7 @@
 
 #include <iostream>
 
-Editor::Editor() : m_square(), m_prog_flat(), m_camera() {}
+Editor::Editor() : m_flowFinity(), m_prog_flat(), m_camera() {}
 
 Editor::~Editor() {
   glDeleteVertexArrays(1, &vao);
@@ -53,8 +54,19 @@ int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
   // using multiple VAOs, we can just bind one once.
   glBindVertexArray(vao);
 
+  float angle = 0.f;
+  int numPoints = 4;
+  for (int i = 0; i < numPoints; ++i) {
+    angle += glm::two_pi<float>() / (float)numPoints;
+    float cx = glm::cos(angle) * 3.f;
+    float sx = glm::sin(angle) * 3.f;
+    m_flowFinity.addAgent(glm::vec2(cx, sx), glm::vec2(-cx, -sx));
+  }
+
   return 0;
 }
+
+void Editor::update(float dt) { m_flowFinity.performTimeStep(dt); }
 
 void Editor::paint() {
   m_prog_flat.setModelMatrix(glm::mat4(1.f));
@@ -68,6 +80,12 @@ void Editor::paint() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   m_prog_flat.draw(m_square);
+
+  glBegin(GL_POINTS);
+  for (auto &pos : m_flowFinity.getAgentPositions()) {
+    glVertex3f(pos.x, pos.y, 0.1f);
+  }
+  glEnd();
 }
 
 void Editor::processEvent(const SDL_Event &event) {

@@ -12,6 +12,6 @@ public:
   bool isInRVO(const glm::vec2 &newVelA) const;
 
 private:
-  glm::vec2 m_posA, m_velA, m_origin, m_ray;
+  glm::vec2 m_posA, m_velA, m_rayOrigin, m_rayDir;
   float m_halfConeAngle;
 };

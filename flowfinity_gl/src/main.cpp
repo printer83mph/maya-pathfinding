@@ -145,6 +145,10 @@ int main(int, char **) {
     return success;
   }
 
+  Uint64 NOW = SDL_GetPerformanceCounter();
+  Uint64 LAST = 0;
+  double deltaTime = 0;
+
   // Main loop
   bool done = false;
 #ifdef __EMSCRIPTEN__
@@ -181,6 +185,12 @@ int main(int, char **) {
           event.window.windowID == SDL_GetWindowID(window))
         done = true;
     }
+
+    LAST = NOW;
+    NOW = SDL_GetPerformanceCounter();
+
+    deltaTime = (double)((NOW - LAST) / (double)SDL_GetPerformanceFrequency());
+    editor.update(deltaTime); // TODO: actual dt
 
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();

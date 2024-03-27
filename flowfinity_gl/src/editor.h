@@ -2,6 +2,8 @@
 #include "engine/scene/square.h"
 #include "engine/shaderprogram.h"
 
+#include <flowfinity.h>
+
 #include <SDL_events.h>
 #include <SDL_video.h>
 
@@ -12,6 +14,7 @@ public:
 
   int initialize(SDL_Window *window, SDL_GLContext gl_context);
   void resize(int width, int height);
+  void update(float dt);
   void paint();
   void processEvent(const SDL_Event &event);
 
@@ -21,6 +24,8 @@ private:
   int m_height;
 
   GLuint vao;
+
+  FlowFinity m_flowFinity;
 
   ShaderProgram m_prog_flat;
   Square m_square;
