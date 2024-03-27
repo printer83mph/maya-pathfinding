@@ -1,8 +1,17 @@
 #pragma once
 
-#include <array>
+#include "graph.h"
+#include "obstacle.h"
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+#undef GLM_DISABLE_EXPERIMENTAL
+#include <glm/ext/vector_float2.hpp>
+#include <glm/ext/vector_float3.hpp>
 #include <glm/vec2.hpp>
 
+#include <array>
+#include <unordered_map>
 #include <vector>
 
 /**
@@ -21,6 +30,10 @@ public:
   void addAgent(const glm::vec2 &pos, const glm::vec2 &target);
   void removeAgent(int index);
 
+  float getEdgeWeight(glm::vec2 point1, glm::vec2 point2);
+  void createGraph(const std::vector<Obstacle> &obstacles);
+  const std::vector<std::pair<glm::vec2, glm::vec2>> &getEdges() const;
+
 private:
   struct Config {
     float maxSpeed = 1.f;
@@ -37,4 +50,10 @@ private:
   std::array<glm::vec2, 33> m_possibleAccels;
 
   glm::vec2 findOptimalAcceleration(int index, float dt) const;
+
+  // Graph logic
+  int m_nextVertex;
+  Graph m_graph;
+  std::unordered_map<glm::vec3, int, std::hash<glm::vec3>> m_NodeToPoint;
+  std::vector<std::pair<glm::vec2, glm::vec2>> edges;
 };

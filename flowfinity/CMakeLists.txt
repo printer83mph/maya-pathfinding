@@ -1,10 +1,14 @@
 set(SOURCES
   "src/flowfinity.cpp"
+  "src/graph.cpp"
+  "src/obstacle.cpp"
   "src/rvo.cpp"
 )
 
 set(HEADERS
   "include/flowfinity.h"
+  "include/graph.h"
+  "include/obstacle.h"
   "include/rvo.h"
 )
 
