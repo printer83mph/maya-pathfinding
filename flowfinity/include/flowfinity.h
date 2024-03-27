@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <glm/vec2.hpp>
 
 #include <vector>
@@ -12,16 +13,27 @@ public:
   FlowFinity();
   ~FlowFinity();
 
+  struct Config {
+    float maxSpeed = 1.f;
+    float acceleration = 0.2f;
+    float radius = 0.25f;
+    float aggressiveness = 1.f;
+  } m_config;
+
+  int size() const;
+
   void performTimeStep(float dt);
+  const std::vector<glm::vec2> &getAgentPositions() const;
 
 private:
   std::vector<glm::vec2> m_rvoPos;
   std::vector<glm::vec2> m_rvoVel;
-  // Points to indices of m_locations
-  std::vector<unsigned int> m_rvoTarget;
+  std::vector<glm::vec2> m_rvoTarget;
 
-  std::vector<glm::vec2> m_locations;
+  std::array<glm::vec2, 8> m_possibleAccels;
 
-  void addAgent(const glm::vec2 &pos, unsigned int target = 0);
-  void removeAgent(unsigned int index);
+  void addAgent(const glm::vec2 &pos, glm::vec2 &target);
+  void removeAgent(int index);
+
+  glm::vec2 findOptimalAcceleration(int index, float dt) const;
 };
