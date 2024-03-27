@@ -15,7 +15,7 @@
 
 Editor::Editor()
     : m_square(), m_cube(), m_prog_flat(), m_prog_lambert(), m_obstacles(),
-      m_cubeTransforms(), m_camera() {}
+      m_flowFinity(), m_cubeTransforms(), m_camera() {}
 
 Editor::~Editor() {
   glDeleteVertexArrays(1, &vao);
@@ -43,17 +43,19 @@ void Editor::addCubeObstacle(glm::vec2 translation, glm::vec2 scale,
   }
 
   // Create obstacle from transformed cube vertices
-  std::unique_ptr<Obstacle> obstacle = std::make_unique<Obstacle>();
-  obstacle->addBound(Edge{glm::vec3(pos_data[0][0], 0, pos_data[0][1]),
-                          glm::vec3(pos_data[1][0], 0, pos_data[1][1])});
-  obstacle->addBound(Edge{glm::vec3(pos_data[1][0], 0, pos_data[1][1]),
-                          glm::vec3(pos_data[2][0], 0, pos_data[2][1])});
-  obstacle->addBound(Edge{glm::vec3(pos_data[2][0], 0, pos_data[2][1]),
-                          glm::vec3(pos_data[3][0], 0, pos_data[3][1])});
-  obstacle->addBound(Edge{glm::vec3(pos_data[3][0], 0, pos_data[3][1]),
-                          glm::vec3(pos_data[0][0], 0, pos_data[0][1])});
-  m_obstacles.push_back(std::move(obstacle));
+  Obstacle obstacle = Obstacle();
+  obstacle.addBound(Edge{glm::vec3(pos_data[0][0], 0, pos_data[0][1]),
+                         glm::vec3(pos_data[1][0], 0, pos_data[1][1])});
+  obstacle.addBound(Edge{glm::vec3(pos_data[1][0], 0, pos_data[1][1]),
+                         glm::vec3(pos_data[2][0], 0, pos_data[2][1])});
+  obstacle.addBound(Edge{glm::vec3(pos_data[2][0], 0, pos_data[2][1]),
+                         glm::vec3(pos_data[3][0], 0, pos_data[3][1])});
+  obstacle.addBound(Edge{glm::vec3(pos_data[3][0], 0, pos_data[3][1]),
+                         glm::vec3(pos_data[0][0], 0, pos_data[0][1])});
+  m_obstacles.push_back(obstacle);
 }
+
+void Editor::createGraph() { m_flowFinity.createGraph(m_obstacles); }
 
 int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
   mp_window = window;
@@ -121,11 +123,13 @@ void Editor::paint() {
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+  // Draw ground
   m_prog_flat.setModelMatrix(
       glm::scale(glm::rotate(glm::radians(90.f), glm::vec3(1, 0, 0)),
                  glm::vec3(10, 10, 0)));
   m_prog_flat.draw(m_square);
 
+  // Draw obstacles based on cube transform list
   for (auto &cubeTransform : m_cubeTransforms) {
     m_prog_lambert.setModelMatrix(
         glm::translate(glm::mat4(1.0f),
@@ -137,14 +141,22 @@ void Editor::paint() {
     m_prog_lambert.draw(m_cube);
   }
 
+  // Draw obstacle vertice
   glDisable(GL_DEPTH_TEST);
   m_prog_flat.setModelMatrix(glm::mat4(1.f));
 
   glBegin(GL_POINTS);
   for (auto &obstacle : m_obstacles) {
-    for (auto &bound : obstacle->getBounds()) {
+    for (auto &bound : obstacle.getBounds()) {
       glVertex3f(bound.point2.x, 0, bound.point2.z);
     }
+  }
+  glEnd();
+
+  glBegin(GL_LINES);
+  for (auto &edge : m_flowFinity.getEdges()) {
+    glVertex3f(edge.first.x, 0, edge.first.y);
+    glVertex3f(edge.second.x, 0, edge.second.y);
   }
   glEnd();
 }

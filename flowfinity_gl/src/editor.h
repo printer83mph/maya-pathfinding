@@ -2,6 +2,7 @@
 #include "engine/scene/cube.h"
 #include "engine/scene/square.h"
 #include "engine/shaderprogram.h"
+#include "flowfinity.h"
 #include "obstacle.h"
 
 #include <SDL_events.h>
@@ -23,11 +24,13 @@ public:
   void paint();
   void processEvent(const SDL_Event &event);
   void addCubeObstacle(glm::vec2 translation, glm::vec2 scale, float rotation);
+  void createGraph();
 
 private:
   SDL_Window *mp_window;
   int m_width;
   int m_height;
+  FlowFinity m_flowFinity;
 
   GLuint vao;
 
@@ -36,7 +39,7 @@ private:
   Square m_square;
   Cube m_cube;
 
-  std::vector<std::unique_ptr<Obstacle>> m_obstacles;
+  std::vector<Obstacle> m_obstacles;
   std::vector<CubeTransform> m_cubeTransforms;
 
   Camera m_camera;

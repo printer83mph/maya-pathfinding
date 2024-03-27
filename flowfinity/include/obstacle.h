@@ -23,6 +23,7 @@ public:
                  const std::vector<Obstacle> &) const;
 
   static bool intersects(const Edge edge1, const Edge edge2);
+  const bool equals(const Obstacle &other) const;
 
 private:
   std::vector<Edge> bounds;

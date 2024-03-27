@@ -216,6 +216,11 @@ int main(int, char **) {
         editor.addCubeObstacle(glm::vec2(trans[0], trans[1]),
                                glm::vec2(scale[0], scale[1]), rotation);
 
+      ImGui::SameLine();
+      if (ImGui::Button(
+              "Create Graph")) // Buttons return true when clicked (most
+                               // widgets return true when edited/activated)
+        editor.createGraph();
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                   1000.0f / io.Framerate, io.Framerate);
       ImGui::End();

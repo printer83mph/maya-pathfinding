@@ -1,11 +1,13 @@
 set(SOURCES
   "src/flowfinity.cpp"
   "src/obstacle.cpp"
+  "src/graph.cpp"
 )
 
 set(HEADERS
   "include/flowfinity.h"
   "include/obstacle.h"
+  "include/graph.h"
 )
 
 add_library(flowfinity STATIC ${SOURCES} ${HEADERS})
