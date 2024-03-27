@@ -1,4 +1,5 @@
 #include "glm/ext/matrix_transform.hpp"
+#include <memory>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "editor.h"
 
@@ -13,11 +14,45 @@
 #include <iostream>
 
 Editor::Editor()
-    : m_square(), m_cube(), m_prog_flat(), m_prog_lambert(), m_camera() {}
+    : m_square(), m_cube(), m_prog_flat(), m_prog_lambert(), m_obstacles(),
+      m_cubeTransforms(), m_camera() {}
 
 Editor::~Editor() {
   glDeleteVertexArrays(1, &vao);
   m_square.destroy();
+}
+
+void Editor::addCubeObstacle(glm::vec2 translation, glm::vec2 scale,
+                             float rotation) {
+  // Record Cube Transforms for drawing later
+  m_cubeTransforms.push_back({translation, scale, rotation});
+
+  // Default cube vertices
+  std::vector<glm::vec2> pos_data{glm::vec2(-1, -1), glm::vec2(-1, 1),
+                                  glm::vec2(1, 1), glm::vec2(1, -1)};
+
+  // Set cube transformations
+  glm::mat2 scale_mat = glm::mat2(scale.x, 0, 0, scale.y);
+  glm::mat2 rot = glm::mat2(
+      glm::cos(glm::radians(rotation)), -glm::sin(glm::radians(rotation)),
+      glm::sin(glm::radians(rotation)), glm::cos(glm::radians(rotation)));
+
+  // Apply transformations to cube vertices
+  for (int i = 0; i < 4; i++) {
+    pos_data[i] = (rot * scale_mat * pos_data[i]) + translation;
+  }
+
+  // Create obstacle from transformed cube vertices
+  std::unique_ptr<Obstacle> obstacle = std::make_unique<Obstacle>();
+  obstacle->addBound(Edge{glm::vec3(pos_data[0][0], 0, pos_data[0][1]),
+                          glm::vec3(pos_data[1][0], 0, pos_data[1][1])});
+  obstacle->addBound(Edge{glm::vec3(pos_data[1][0], 0, pos_data[1][1]),
+                          glm::vec3(pos_data[2][0], 0, pos_data[2][1])});
+  obstacle->addBound(Edge{glm::vec3(pos_data[2][0], 0, pos_data[2][1]),
+                          glm::vec3(pos_data[3][0], 0, pos_data[3][1])});
+  obstacle->addBound(Edge{glm::vec3(pos_data[3][0], 0, pos_data[3][1]),
+                          glm::vec3(pos_data[0][0], 0, pos_data[0][1])});
+  m_obstacles.push_back(std::move(obstacle));
 }
 
 int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
@@ -56,8 +91,13 @@ int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
 
   m_square.create();
   m_cube.create();
+
   m_prog_flat.create("passthrough.vert.glsl", "flat.frag.glsl");
   m_prog_lambert.create("passthrough.vert.glsl", "lambert.frag.glsl");
+
+  // Add some obstacles
+  // addCubeObstacle(glm::vec2(1, 2), glm::vec2(2, 2), 45);
+  // addCubeObstacle(glm::vec2(-5, -2), glm::vec2(1, 3), 15)
 
   // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
   // using multiple VAOs, we can just bind one once.
@@ -86,9 +126,27 @@ void Editor::paint() {
                  glm::vec3(10, 10, 0)));
   m_prog_flat.draw(m_square);
 
-  m_prog_lambert.setModelMatrix(
-      glm::translate(glm::mat4(1.0f), glm::vec3(0, 1.f, 0)));
-  m_prog_lambert.draw(m_cube);
+  for (auto &cubeTransform : m_cubeTransforms) {
+    m_prog_lambert.setModelMatrix(
+        glm::translate(glm::mat4(1.0f),
+                       glm::vec3(cubeTransform.translation.x, 1.f,
+                                 cubeTransform.translation.y)) *
+        glm::rotate(glm::radians(cubeTransform.rotation), glm::vec3(0, 1, 0)) *
+        glm::scale(glm::mat4(1.0f),
+                   glm::vec3(cubeTransform.scale.x, 1, cubeTransform.scale.y)));
+    m_prog_lambert.draw(m_cube);
+  }
+
+  glDisable(GL_DEPTH_TEST);
+  m_prog_flat.setModelMatrix(glm::mat4(1.f));
+
+  glBegin(GL_POINTS);
+  for (auto &obstacle : m_obstacles) {
+    for (auto &bound : obstacle->getBounds()) {
+      glVertex3f(bound.point2.x, 0, bound.point2.z);
+    }
+  }
+  glEnd();
 }
 
 void Editor::processEvent(const SDL_Event &event) {
