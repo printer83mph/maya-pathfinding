@@ -6,13 +6,20 @@
 #include <glm/vec4.hpp>
 #include <vector>
 
-Cube::Cube() : Drawable() {}
+Cube::Cube() : Drawable(), x(0), y(0), z(0) {}
+
+Cube::Cube(float x, float y, float z) : Drawable(), x(x), y(y), z(z) {}
 
 Cube::~Cube() {}
 
 void Cube::create() {
-  std::vector<glm::vec4> pos{glm::vec4(-1, -1, -1, 1), glm::vec4(1, -1, -1, 1),
-                             glm::vec4(1, 1, -1, 1), glm::vec4(-1, 1, -1, 1)};
+  std::vector<glm::vec4> pos_data{
+      glm::vec4(-1, -1, -1, 1), glm::vec4(1, -1, -1, 1), glm::vec4(1, 1, -1, 1),
+      glm::vec4(-1, 1, -1, 1)};
+
+  std::vector<glm::vec4> pos{
+      glm::vec4(-1 + x, -1 + y, -1 + z, 1), glm::vec4(1 + x, -1 + y, -1 + z, 1),
+      glm::vec4(1 + x, 1 + y, -1 + z, 1), glm::vec4(-1 + x, 1 + y, -1 + z, 1)};
 
   std::vector<glm::vec4> nor{glm::vec4(0, 0, -1, 0), glm::vec4(0, 0, -1, 0),
                              glm::vec4(0, 0, -1, 0), glm::vec4(0, 0, -1, 0)};
@@ -34,7 +41,7 @@ void Cube::create() {
     }
 
     for (int i = 0; i < 4; i++) {
-      pos.push_back(rot * pos[i]);
+      pos.push_back((rot * pos_data[i]) + glm::vec4(x, y, z, 0));
       nor.push_back(rot * nor[i]);
       col.push_back(glm::vec4(0.5, 0.5, 0.5, 1));
     }

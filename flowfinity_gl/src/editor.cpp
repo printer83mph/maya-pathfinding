@@ -25,6 +25,10 @@ int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
 
   SDL_GL_GetDrawableSize(window, &m_width, &m_height);
   m_camera = Camera(m_width, m_height);
+  m_camera.ScaleZoom(3);
+  m_camera.RotateAboutRight(-45);
+  m_camera.RotateAboutUp(-45);
+  m_camera.RecomputeAttributes();
 
   GLenum err = glewInit();
   if (err != GLEW_OK) {
