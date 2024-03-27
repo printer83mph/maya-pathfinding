@@ -24,6 +24,8 @@ public:
 
   int size() const;
   const std::vector<glm::vec2> &getAgentPositions() const;
+  const std::vector<glm::vec2> &getAgentVelocities() const;
+  const std::vector<glm::vec2> &getAgentTargets() const;
 
   void performTimeStep(float dt);
 

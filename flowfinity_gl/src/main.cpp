@@ -231,6 +231,14 @@ int main(int, char **) {
               "Create Graph")) // Buttons return true when clicked (most
                                // widgets return true when edited/activated)
         editor.createGraph();
+
+      static int numAgents = 4;
+
+      ImGui::SliderInt("Count", &numAgents, 1, 5);
+
+      if (ImGui::Button("Spawn Agents"))
+        editor.addActors(numAgents);
+
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                   1000.0f / io.Framerate, io.Framerate);
       ImGui::End();

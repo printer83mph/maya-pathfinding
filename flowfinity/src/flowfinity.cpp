@@ -34,6 +34,12 @@ int FlowFinity::size() const { return m_rvoPos.size(); }
 const std::vector<glm::vec2> &FlowFinity::getAgentPositions() const {
   return m_rvoPos;
 }
+const std::vector<glm::vec2> &FlowFinity::getAgentVelocities() const {
+  return m_rvoVel;
+}
+const std::vector<glm::vec2> &FlowFinity::getAgentTargets() const {
+  return m_rvoTarget;
+}
 
 void FlowFinity::performTimeStep(float dt) {
   for (int i = 0; i < m_rvoPos.size(); ++i) {
@@ -46,6 +52,7 @@ void FlowFinity::performTimeStep(float dt) {
     m_rvoVel[i] += accel * dt;
     m_rvoPos[i] += m_rvoVel[i] * dt;
 
+#if 0
     // if colliding, bump out
     for (int j = 0; j < m_rvoPos.size(); ++j) {
       if (i == j)
@@ -56,6 +63,7 @@ void FlowFinity::performTimeStep(float dt) {
         m_rvoPos[i] += dirFromOther * (m_config.radius * 2.f - dist);
       }
     }
+#endif
   }
 }
 
@@ -86,7 +94,7 @@ glm::vec2 FlowFinity::findOptimalAcceleration(int index, float dt) const {
       idealAccel *= m_config.acceleration / accelLength;
     }
   }
-  const glm::vec2 *bestAcceleration = &m_possibleAccels[0];
+  const glm::vec2 *bestAcceleration = &idealAccel;
   float bestPenalty = std::numeric_limits<float>::max();
 
   for (int i = 0; i < m_rvoPos.size(); ++i) {

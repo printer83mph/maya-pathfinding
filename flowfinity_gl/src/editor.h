@@ -3,6 +3,7 @@
 #include "engine/scene/square.h"
 #include "engine/shaderprogram.h"
 #include "flowfinity.h"
+#include "glm/ext/vector_float2.hpp"
 #include "obstacle.h"
 
 #include <flowfinity.h>
@@ -27,6 +28,7 @@ public:
   void paint();
   void processEvent(const SDL_Event &event);
   void addCubeObstacle(glm::vec2 translation, glm::vec2 scale, float rotation);
+  void addActors(int numAgents);
   void createGraph();
 
 private:

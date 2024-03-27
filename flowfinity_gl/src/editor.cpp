@@ -1,6 +1,8 @@
 #include "editor.h"
 
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/geometric.hpp"
+#include <cstdlib>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtc/constants.hpp"
 
@@ -56,6 +58,17 @@ void Editor::addCubeObstacle(glm::vec2 translation, glm::vec2 scale,
   m_obstacles.push_back(obstacle);
 }
 
+void Editor::addActors(int numAgents) {
+  // initialize some debug flowFinity agents
+  float angle = 0.f;
+  for (int i = 0; i < numAgents; ++i) {
+    angle += glm::two_pi<float>() / (float)numAgents;
+    float cx = glm::cos(angle) * 2.f;
+    float sx = glm::sin(angle) * 2.f;
+    m_flowFinity.addAgent(glm::vec2(cx, sx), glm::vec2(-cx, -sx));
+  }
+}
+
 void Editor::createGraph() { m_flowFinity.createGraph(m_obstacles); }
 
 int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
@@ -106,20 +119,26 @@ int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
   // using multiple VAOs, we can just bind one once.
   glBindVertexArray(vao);
 
-  // initialize some debug flowFinity agents
-  float angle = 0.f;
-  int numPoints = 4;
-  for (int i = 0; i < numPoints; ++i) {
-    angle += glm::two_pi<float>() / (float)numPoints;
-    float cx = glm::cos(angle) * 2.f;
-    float sx = glm::sin(angle) * 2.f;
-    m_flowFinity.addAgent(glm::vec2(cx, sx), glm::vec2(-cx, -sx));
-  }
-
   return 0;
 }
 
-void Editor::update(float dt) { m_flowFinity.performTimeStep(dt); }
+void Editor::update(float dt) {
+  // Run time step for simulation
+  m_flowFinity.performTimeStep(dt);
+
+  // Delete agents that arrived at their targets
+  auto &agentPositions = m_flowFinity.getAgentPositions();
+  auto &agentTargets = m_flowFinity.getAgentTargets();
+  for (int i = m_flowFinity.size() - 1; i >= 0; --i) {
+    auto pos = agentPositions[i];
+    auto target = agentTargets[i];
+
+    if (glm::distance(pos, target) < 0.1) {
+      m_flowFinity.removeAgent(i);
+      continue;
+    }
+  }
+}
 
 void Editor::paint() {
   m_prog_flat.setModelMatrix(glm::mat4(1.f));
@@ -144,7 +163,7 @@ void Editor::paint() {
 
   glBegin(GL_POINTS);
   for (auto &pos : m_flowFinity.getAgentPositions())
-    glVertex3f(pos.x, pos.y, 0.1f);
+    glVertex3f(pos.x, pos.y, 0.2f);
   glEnd();
 
   // Draw obstacles based on cube transform list
