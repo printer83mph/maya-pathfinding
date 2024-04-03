@@ -9,6 +9,7 @@ public:
   void addEdge(int src, int dest, float weight);
   void removeEdge(int src, int dest);
   float getEdge(int src, int dest) const;
+  const int getVertices() const;
 
 private:
   int vertices;

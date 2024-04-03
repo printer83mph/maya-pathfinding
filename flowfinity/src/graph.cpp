@@ -16,3 +16,5 @@ void Graph::addEdge(int src, int dest, float weight) {
 void Graph::removeEdge(int src, int dest) { addEdge(src, dest, 0); }
 
 float Graph::getEdge(int src, int dest) const { return adjMatrix[src][dest]; }
+
+const int Graph::getVertices() const { return vertices; }

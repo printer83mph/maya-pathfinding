@@ -1,5 +1,6 @@
 #include "engine/camera.h"
 #include "engine/scene/cube.h"
+#include "engine/scene/pathDisplay.h"
 #include "engine/scene/square.h"
 #include "engine/shaderprogram.h"
 #include "flowfinity.h"
@@ -24,7 +25,8 @@ public:
   void paint();
   void processEvent(const SDL_Event &event);
   void addCubeObstacle(glm::vec2 translation, glm::vec2 scale, float rotation);
-  void createGraph();
+  void createGraph(std::vector<std::pair<glm::vec3, glm::vec3>> *endpoints);
+  void getDisjkstraPath(glm::vec3, glm::vec3);
 
 private:
   SDL_Window *mp_window;
@@ -38,9 +40,13 @@ private:
   ShaderProgram m_prog_lambert;
   Square m_square;
   Cube m_cube;
+  PathDisplay m_pathDisplay;
+
+  bool m_drawPath;
 
   std::vector<Obstacle> m_obstacles;
   std::vector<CubeTransform> m_cubeTransforms;
+  std::vector<glm::vec3> m_path;
 
   Camera m_camera;
 };
