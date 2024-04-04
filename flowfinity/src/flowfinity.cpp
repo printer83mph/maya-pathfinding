@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <iterator>
-#include <limits>
 #include <vector>
 
 FlowFinity::FlowFinity()
@@ -36,12 +35,78 @@ FlowFinity::getEdges() const {
   return edges;
 }
 
-// Just create a graph with the given obstacles
-void FlowFinity::createGraph(
-    const std::vector<Obstacle> &obstacles,
-    const std::vector<std::pair<glm::vec3, glm::vec3>> *endPoints) {
-  // Get total number of nodes
+// Add endpoints to the graph and create edges between them and the obstacles
+void FlowFinity::addEndPoints(
+    const std::vector<std::pair<glm::vec3, glm::vec3>> &endPoints,
+    const std::vector<Obstacle> &obstacles) {
+  // TODO
+  int totalNodes = 0;
 
+  // For each pair of endpoints
+  for (auto &pair : endPoints) {
+    glm::vec3 start = pair.first;
+    glm::vec3 end = pair.second;
+
+    // Add endpoints to the maps
+    if (m_NodeToPoint.find(start) == m_NodeToPoint.end()) {
+      m_nextVertex++;
+      m_NodeToPoint[start] = m_nextVertex;
+      m_PointToNode[m_nextVertex] = start;
+      totalNodes++;
+    }
+    if (m_NodeToPoint.find(end) == m_NodeToPoint.end()) {
+      m_nextVertex++;
+      m_NodeToPoint[end] = m_nextVertex;
+      m_PointToNode[m_nextVertex] = end;
+      totalNodes++;
+    }
+
+    // With the total unique endpoints, add them to the map
+    m_graph.vertices = m_graph.vertices + totalNodes;
+    // Add the new rows
+    for (int i = 0; i < totalNodes; i++) {
+      m_graph.adjMatrix.push_back(std::vector<float>());
+      m_graph.adjMatrix.back().resize(m_graph.vertices);
+    }
+    // Update the old rows
+    for (int i = 0; i < m_graph.vertices - totalNodes; i++) {
+      m_graph.adjMatrix[i].resize(m_graph.vertices);
+    }
+
+    // Create an edge between the two endpoints if they are visible
+    if (Obstacle::isVisibleExternal(start, end, obstacles)) {
+      m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[end],
+                      glm::distance(start, end));
+      edges.push_back(std::pair<glm::vec2, glm::vec2>(
+          glm::vec2(start.x, start.z), glm::vec2(end.x, end.z)));
+    }
+
+    // For each obstacle, check if the edge between the start and end point to
+    // each obstacle point is visible, if so create an edge
+    for (auto &obstacle : obstacles) {
+      // TODO: Optimize
+      for (auto &edge : obstacle.getBounds()) {
+        if (obstacle.isVisible(start, edge.point1, obstacles)) {
+          m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[edge.point1],
+                          glm::distance(start, edge.point1));
+          edges.push_back(std::pair<glm::vec2, glm::vec2>(
+              glm::vec2(start.x, start.z),
+              glm::vec2(edge.point1.x, edge.point1.z)));
+        }
+        if (obstacle.isVisible(end, edge.point1, obstacles)) {
+          m_graph.addEdge(m_NodeToPoint[end], m_NodeToPoint[edge.point1],
+                          glm::distance(end, edge.point1));
+          edges.push_back(std::pair<glm::vec2, glm::vec2>(
+              glm::vec2(end.x, end.z),
+              glm::vec2(edge.point1.x, edge.point1.z)));
+        }
+      }
+    }
+  }
+}
+
+// Just create a graph with the given obstacles
+void FlowFinity::createGraph(const std::vector<Obstacle> &obstacles) {
   // Make sure to clear the graph and maps
   m_NodeToPoint.clear();
   m_PointToNode.clear();
@@ -50,65 +115,11 @@ void FlowFinity::createGraph(
 
   // Get total amount of vertices
   int totalNodes = 0;
+  // Record total amount of waypoints
   for (auto &obstacle : obstacles) {
     totalNodes += obstacle.getBoundsCount();
   }
-  if (endPoints != nullptr) {
-    for (auto &pair : *endPoints) {
-      totalNodes += 2;
-    }
-  }
   m_graph = Graph(totalNodes);
-
-  // Add endpoints to the graph and create edges between them and the obstacles
-  if (endPoints != nullptr) {
-    // For each pair of endpoints
-    for (auto &pair : *endPoints) {
-      glm::vec3 start = pair.first;
-      glm::vec3 end = pair.second;
-
-      // Add endpoints to the graph
-      if (m_NodeToPoint.find(start) == m_NodeToPoint.end()) {
-        m_nextVertex++;
-        m_NodeToPoint[start] = m_nextVertex;
-        m_PointToNode[m_nextVertex] = start;
-      }
-      if (m_NodeToPoint.find(end) == m_NodeToPoint.end()) {
-        m_nextVertex++;
-        m_NodeToPoint[end] = m_nextVertex;
-        m_PointToNode[m_nextVertex] = end;
-      }
-
-      // Create an edge between the two endpoints if they are visible
-      if (Obstacle::isVisibleExternal(start, end, obstacles)) {
-        m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[end],
-                        glm::distance(start, end));
-        edges.push_back(std::pair<glm::vec2, glm::vec2>(
-            glm::vec2(start.x, start.z), glm::vec2(end.x, end.z)));
-      }
-
-      // For each obstacle, check if the edge between the start and end point to
-      // each obstacle point is visible, if so create an edge
-      for (auto &obstacle : obstacles) {
-        for (auto &edge : obstacle.getBounds()) {
-          if (obstacle.isVisible(start, edge.point1, obstacles)) {
-            m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[edge.point1],
-                            glm::distance(start, edge.point1));
-            edges.push_back(std::pair<glm::vec2, glm::vec2>(
-                glm::vec2(start.x, start.z),
-                glm::vec2(edge.point1.x, edge.point1.z)));
-          }
-          if (obstacle.isVisible(end, edge.point1, obstacles)) {
-            m_graph.addEdge(m_NodeToPoint[end], m_NodeToPoint[edge.point1],
-                            glm::distance(end, edge.point1));
-            edges.push_back(std::pair<glm::vec2, glm::vec2>(
-                glm::vec2(end.x, end.z),
-                glm::vec2(edge.point1.x, edge.point1.z)));
-          }
-        }
-      }
-    }
-  }
 
   // For each obstacle
   for (auto &obstacle : obstacles) {

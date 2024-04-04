@@ -25,7 +25,7 @@ public:
   void paint();
   void processEvent(const SDL_Event &event);
   void addCubeObstacle(glm::vec2 translation, glm::vec2 scale, float rotation);
-  void createGraph(std::vector<std::pair<glm::vec3, glm::vec3>> *endpoints);
+  void createGraph();
   void getDisjkstraPath(glm::vec3, glm::vec3);
 
 private:

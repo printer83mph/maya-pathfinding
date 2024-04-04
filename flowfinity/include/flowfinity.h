@@ -20,9 +20,10 @@ public:
   void performTimeStep(float dt);
 
   float getEdgeWeight(glm::vec2 point1, glm::vec2 point2);
+  void createGraph(const std::vector<Obstacle> &obstacles);
   void
-  createGraph(const std::vector<Obstacle> &obstacles,
-              const std::vector<std::pair<glm::vec3, glm::vec3>> *endPoints);
+  addEndPoints(const std::vector<std::pair<glm::vec3, glm::vec3>> &endPoints,
+               const std::vector<Obstacle> &obstacles);
   const std::vector<std::pair<glm::vec2, glm::vec2>> &getEdges() const;
 
   std::vector<glm::vec3> getDisjkstraPath(glm::vec3 start, glm::vec3 end);
@@ -33,6 +34,7 @@ private:
 
   // Graph logic
   int m_nextVertex;
+  int m_totalWaypoints;
   Graph m_graph;
   std::unordered_map<glm::vec3, int, std::hash<glm::vec3>> m_NodeToPoint;
   std::unordered_map<int, glm::vec3> m_PointToNode;

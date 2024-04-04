@@ -1,20 +1,18 @@
 #include <obstacle.h>
 
 Obstacle::Obstacle()
-    : bounds(std::vector<Edge>()), boundsCount(0)
-// boundingBox(glm::vec4(INT_MAX, INT_MAX, INT_MIN, INT_MIN))
-{}
+    : bounds(std::vector<Edge>()), boundsCount(0),
+      boundingBox(glm::vec4(INT_MAX, INT_MAX, INT_MIN, INT_MIN)) {}
 
 Obstacle::Obstacle(const std::vector<Edge> &boundsInput)
-    : bounds(boundsInput), boundsCount(boundsInput.size())
-// boundingBox(glm::vec4(INT_MAX, INT_MAX, INT_MIN, INT_MIN))
-{
+    : bounds(boundsInput), boundsCount(boundsInput.size()),
+      boundingBox(glm::vec4(INT_MAX, INT_MAX, INT_MIN, INT_MIN)) {
 
   for (const Edge &edge : bounds) {
-    // boundingBox.x = std::min(boundingBox.x, edge.point1.x);
-    // boundingBox.y = std::min(boundingBox.y, edge.point1.z);
-    // boundingBox.z = std::max(boundingBox.z, edge.point1.x);
-    // boundingBox.w = std::max(boundingBox.w, edge.point1.z);
+    boundingBox.x = std::min(boundingBox.x, edge.point1.x);
+    boundingBox.y = std::min(boundingBox.y, edge.point1.z);
+    boundingBox.z = std::max(boundingBox.z, edge.point1.x);
+    boundingBox.w = std::max(boundingBox.w, edge.point1.z);
   }
 }
 
@@ -23,10 +21,10 @@ const std::vector<Edge> &Obstacle::getBounds() const { return bounds; }
 void Obstacle::addBound(const Edge &bound) {
   bounds.push_back(bound);
   boundsCount++;
-  // boundingBox.x = std::min(boundingBox.x, bound.point1.x);
-  // boundingBox.y = std::min(boundingBox.y, bound.point1.z);
-  // boundingBox.z = std::max(boundingBox.z, bound.point1.x);
-  // boundingBox.w = std::max(boundingBox.w, bound.point1.z);
+  boundingBox.x = std::min(boundingBox.x, bound.point1.x);
+  boundingBox.y = std::min(boundingBox.y, bound.point1.z);
+  boundingBox.z = std::max(boundingBox.z, bound.point1.x);
+  boundingBox.w = std::max(boundingBox.w, bound.point1.z);
 }
 
 const int Obstacle::getBoundsCount() const { return boundsCount; }
@@ -107,38 +105,21 @@ bool Obstacle::isVisible(const glm::vec3 &externalPoint,
                          const std::vector<Obstacle> &obstacleList) const {
 
   // Create bounding box from the direction (obstacles potentially in the way)
-  glm::vec4 rayBoundingBox(std::min(externalPoint.x, obstaclePoint.x),
-                           std::min(externalPoint.z, obstaclePoint.z),
-                           std::max(externalPoint.x, obstaclePoint.x),
-                           std::max(externalPoint.z, obstaclePoint.z));
   // For each obstacle in the obstacleList, check if the bounding box of the
   // obstacle intersects with the rayBoundingBox
   for (const Obstacle &obstacle : obstacleList) {
-    if ((((obstacle.boundingBox.x > rayBoundingBox.x) &&
-          (obstacle.boundingBox.x < rayBoundingBox.z)) ||
-         (obstacle.boundingBox.z > rayBoundingBox.x) &&
-             (obstacle.boundingBox.z < rayBoundingBox.z)) &&
-            (((obstacle.boundingBox.y > rayBoundingBox.y) &&
-              (obstacle.boundingBox.y < rayBoundingBox.w)) ||
-             ((obstacle.boundingBox.w > rayBoundingBox.y) &&
-              (obstacle.boundingBox.w < rayBoundingBox.w))) ||
-        (obstacle.boundingBox.x == this->boundingBox.x &&
-         obstacle.boundingBox.y == this->boundingBox.y &&
-         obstacle.boundingBox.z == this->boundingBox.z &&
-         obstacle.boundingBox.w == this->boundingBox.w)) {
-      // If the bounding boxes intersect, check if the ray intersects with the
-      // obstacle
-      for (const Edge &edge : obstacle.bounds) {
-        // Check if the ray intersects with the edge
-        // If the ray intersects with the edge, the obstacle is not visible
-        // Or if any of the edge points are collinear with the ray, then return
-        // false
-        if (edge.point1 != obstaclePoint && edge.point2 != obstaclePoint) {
-          if (intersects(Edge{externalPoint, obstaclePoint}, edge)
-              //||isCollinear(externalPoint, obstaclePoint, edge.point1)
-          ) {
-            return false;
-          }
+    // TODO: Check if ray bouding box intersects with obstacle bounding box
+    // (does the obstacle lie in the way?) for optimization
+    for (const Edge &edge : obstacle.bounds) {
+      // Check if the ray intersects with the edge
+      // If the ray intersects with the edge, the obstacle is not visible
+      // Or if any of the edge points are collinear with the ray, then return
+      // false
+      if (edge.point1 != obstaclePoint && edge.point2 != obstaclePoint) {
+        if (intersects(Edge{externalPoint, obstaclePoint}, edge)
+            //||isCollinear(externalPoint, obstaclePoint, edge.point1)
+        ) {
+          return false;
         }
       }
     }
@@ -150,32 +131,16 @@ bool Obstacle::isVisible(const glm::vec3 &externalPoint,
 bool Obstacle::isVisibleExternal(const glm::vec3 &externalPoint,
                                  const glm::vec3 &obstaclePoint,
                                  const std::vector<Obstacle> &obstacleList) {
-  // Create bounding box from the direction (obstacles potentially in the way)
-  glm::vec4 rayBoundingBox(std::min(externalPoint.x, obstaclePoint.x),
-                           std::min(externalPoint.z, obstaclePoint.z),
-                           std::max(externalPoint.x, obstaclePoint.x),
-                           std::max(externalPoint.z, obstaclePoint.z));
-
-  // For each obstacle in the obstacleList, check if the bounding box of the
-  // obstacle intersects with the rayBoundingBox
+  // For each obstacle in the obstacleList
   for (const Obstacle &obstacle : obstacleList) {
-    if ((((obstacle.boundingBox.x > rayBoundingBox.x) &&
-          (obstacle.boundingBox.x < rayBoundingBox.z)) ||
-         (obstacle.boundingBox.z > rayBoundingBox.x) &&
-             (obstacle.boundingBox.z < rayBoundingBox.z)) &&
-        (((obstacle.boundingBox.y > rayBoundingBox.y) &&
-          (obstacle.boundingBox.y < rayBoundingBox.w)) ||
-         ((obstacle.boundingBox.w > rayBoundingBox.y) &&
-          (obstacle.boundingBox.w < rayBoundingBox.w)))) {
-      // If the bounding boxes intersect, check if the ray intersects with the
-      // obstacle
-      for (const Edge &edge : obstacle.bounds) {
-        // Check if the ray intersects with the edge
-        // If the ray intersects with the edge, the obstacle is not visible
-        if (edge.point1 != obstaclePoint && edge.point2 != obstaclePoint) {
-          if (intersects(Edge{externalPoint, obstaclePoint}, edge)) {
-            return false;
-          }
+    // TODO: Check if ray bouding box intersects with obstacle bounding box
+    // (does the obstacle lie in the way?) for optimization
+    for (const Edge &edge : obstacle.bounds) {
+      // Check if the ray intersects with the edge
+      // If the ray intersects with the edge, the obstacle is not visible
+      if (edge.point1 != obstaclePoint && edge.point2 != obstaclePoint) {
+        if (intersects(Edge{externalPoint, obstaclePoint}, edge)) {
+          return false;
         }
       }
     }

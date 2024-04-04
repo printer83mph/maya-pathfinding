@@ -1,7 +1,6 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "obstacle.h"
-#include <memory>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "editor.h"
 
@@ -57,28 +56,25 @@ void Editor::addCubeObstacle(glm::vec2 translation, glm::vec2 scale,
                          glm::vec3(pos_data[0][0], 0, pos_data[0][1])});
   // if the created obstacle is not already in the same obstacle (same bounds),
   // then add it
-  // for (auto &obstacleInList : m_obstacles) {
-  //   glm::vec4 boundingBox = obstacle.getBoundingBox();
-  //   glm::vec4 boundingBoxInList = obstacleInList.getBoundingBox();
-  //   if (boundingBox.x == boundingBoxInList.x &&
-  //       boundingBox.y == boundingBoxInList.y &&
-  //       boundingBox.z == boundingBoxInList.z &&
-  //       boundingBox.w == boundingBoxInList.w) {
-  //     return;
-  //   }
-  // }
+  for (auto &obstacleInList : m_obstacles) {
+    glm::vec4 boundingBox = obstacle.getBoundingBox();
+    glm::vec4 boundingBoxInList = obstacleInList.getBoundingBox();
+    if (boundingBox.x == boundingBoxInList.x &&
+        boundingBox.y == boundingBoxInList.y &&
+        boundingBox.z == boundingBoxInList.z &&
+        boundingBox.w == boundingBoxInList.w) {
+      return;
+    }
+  }
   m_obstacles.push_back(obstacle);
 }
 
-void Editor::createGraph(
-    std::vector<std::pair<glm::vec3, glm::vec3>> *endpoints) {
-  m_flowFinity.createGraph(m_obstacles, endpoints);
-}
+void Editor::createGraph() { m_flowFinity.createGraph(m_obstacles); }
 
 void Editor::getDisjkstraPath(glm::vec3 start, glm::vec3 end) {
   std::vector<std::pair<glm::vec3, glm::vec3>> endpoints;
   endpoints.push_back(std::make_pair(start, end));
-  createGraph(&endpoints);
+  m_flowFinity.addEndPoints(endpoints, m_obstacles);
   m_path = m_flowFinity.getDisjkstraPath(start, end);
   m_pathDisplay = PathDisplay(m_path);
   m_pathDisplay.create();

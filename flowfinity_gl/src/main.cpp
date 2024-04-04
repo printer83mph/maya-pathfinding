@@ -222,7 +222,7 @@ int main(int, char **) {
       if (ImGui::Button(
               "Create Graph")) // Buttons return true when clicked (most
                                // widgets return true when edited/activated)
-        editor.createGraph(nullptr);
+        editor.createGraph();
 
       ImGui::InputFloat2("Start", start);
       ImGui::InputFloat2("End", end);
