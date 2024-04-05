@@ -2,11 +2,11 @@
 
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/geometric.hpp"
-#include <cstdlib>
-#define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtc/constants.hpp"
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/transform.hpp"
+#undef GLM_ENABLE_EXPERIMENTAL
 #include <SDL.h>
 #include <SDL_events.h>
 #include <SDL_keycode.h>

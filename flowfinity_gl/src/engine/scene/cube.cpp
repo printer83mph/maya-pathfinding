@@ -1,7 +1,8 @@
-#define GLM_ENABLE_EXPERIMENTAL
 #include "cube.h"
 #include "glm/ext/matrix_float4x4.hpp"
+#define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/transform.hpp"
+#undef GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/vec4.hpp>
 #include <vector>
