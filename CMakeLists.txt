@@ -6,6 +6,9 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
+# grab maya location from environment variable
+set(MAYA_LOCATION $ENV{MAYA_LOCATION})
+
 project(maya_pathfinding VERSION 1.0
                          DESCRIPTION "A parallelized pathfinding plugin for Maya"
                          LANGUAGES CXX)
@@ -32,3 +35,4 @@ endif()
 # subdirectory targets
 add_subdirectory(flowfinity)
 add_subdirectory(flowfinity_gl)
+add_subdirectory(flowfinity_maya)
