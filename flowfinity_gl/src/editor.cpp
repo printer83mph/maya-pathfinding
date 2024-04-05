@@ -6,6 +6,7 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/geometric.hpp"
 #include "glm/gtc/constants.hpp"
+#include <cstdlib>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/transform.hpp"
@@ -176,6 +177,17 @@ void Editor::update(float dt) {
   // Run time step for simulation
   m_flowFinity.performTimeStep(dt);
 
+  // spawn agents
+  if (m_paths.size() > 0) {
+    if (m_flowFinity.size() < 5 && m_paths[0].size() > 1) {
+      if ((float)std::rand() / (float)RAND_MAX < dt * 0.5f) {
+        m_flowFinity.addAgent(
+            glm::vec2(m_paths[0].front().x, m_paths[0].front().z),
+            glm::vec2(m_paths[0].at(1).x, m_paths[0].at(1).z));
+      }
+    }
+  }
+
   // Delete agents that arrived at their targets
   auto &agentPositions = m_flowFinity.getAgentPositions();
   auto &agentTargets = m_flowFinity.getAgentTargets();
@@ -183,9 +195,23 @@ void Editor::update(float dt) {
     auto pos = agentPositions[i];
     auto target = agentTargets[i];
 
-    if (glm::distance(pos, target) < 0.1) {
-      m_flowFinity.removeAgent(i);
-      continue;
+    if (glm::distance(pos, target) < 0.15f) {
+      auto &end = m_paths[0].back();
+      if (glm::distance(target, glm::vec2(end.x, end.z)) < 0.1f) {
+        // Agent has reached its final target
+        m_flowFinity.removeAgent(i);
+        continue;
+      } else {
+        // Loop through waypoints to check if we've reached one
+        for (int j = 0; j < m_paths[0].size() - 1; ++j) {
+          auto &waypoint = m_paths[0].at(j);
+          if (glm::distance(pos, glm::vec2(waypoint.x, waypoint.z)) < 0.1f) {
+            auto &tgt = m_paths[0].at(j + 1);
+            m_flowFinity.setAgentTarget(i, glm::vec2(tgt.x, tgt.z));
+            continue;
+          }
+        }
+      }
     }
   }
 }
@@ -210,11 +236,6 @@ void Editor::paint() {
       glm::scale(glm::rotate(glm::radians(90.f), glm::vec3(1, 0, 0)),
                  glm::vec3(10, 10, 0)));
   m_prog_flat.draw(m_square);
-
-  glBegin(GL_POINTS);
-  for (auto &pos : m_flowFinity.getAgentPositions())
-    glVertex3f(pos.x, pos.y, 0.2f);
-  glEnd();
 
   // Draw obstacles based on cube transform list
   for (auto &cubeTransform : m_cubeTransforms) {
@@ -259,6 +280,9 @@ void Editor::paint() {
       m_prog_flat.draw(path);
     }
   }
+
+  m_flowFinity.drawPoints();
+  m_flowFinity.drawVelocities();
 }
 
 void Editor::processEvent(const SDL_Event &event) {
