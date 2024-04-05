@@ -31,7 +31,8 @@ public:
   void addCubeObstacle(glm::vec2 translation, glm::vec2 scale, float rotation);
   void addActors(int numAgents);
   void createGraph();
-  void getDisjkstraPath(glm::vec3, glm::vec3);
+  void getDisjkstraPath(std::vector<std::pair<glm::vec3, glm::vec3>> endPoints);
+  void clearObstacles();
 
 private:
   SDL_Window *mp_window;
@@ -46,14 +47,14 @@ private:
   ShaderProgram m_prog_lambert;
   Square m_square;
   Cube m_cube;
-  PathDisplay m_pathDisplay;
+  std::vector<PathDisplay> m_pathDisplay;
 
   bool m_drawPath;
   bool m_graphCreated;
 
   std::vector<Obstacle> m_obstacles;
   std::vector<CubeTransform> m_cubeTransforms;
-  std::vector<glm::vec3> m_path;
+  std::vector<std::vector<glm::vec3>> m_paths;
 
   Camera m_camera;
 };

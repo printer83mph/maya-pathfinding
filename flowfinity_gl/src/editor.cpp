@@ -74,6 +74,12 @@ void Editor::addCubeObstacle(glm::vec2 translation, glm::vec2 scale,
   m_obstacles.push_back(obstacle);
 }
 
+void Editor::clearObstacles() {
+  m_obstacles.clear();
+  m_graphCreated = false;
+  m_cubeTransforms.clear();
+}
+
 void Editor::addActors(int numAgents) {
   // initialize some debug flowFinity agents
   float angle = 0.f;
@@ -90,15 +96,27 @@ void Editor::createGraph() {
   m_graphCreated = true;
 }
 
-void Editor::getDisjkstraPath(glm::vec3 start, glm::vec3 end) {
-  if (!m_graphCreated)
+void Editor::getDisjkstraPath(
+    std::vector<std::pair<glm::vec3, glm::vec3>> endpoints) {
+  if (!m_graphCreated) {
     createGraph();
-  std::vector<std::pair<glm::vec3, glm::vec3>> endpoints;
-  endpoints.push_back(std::make_pair(start, end));
+  }
+  if (m_drawPath) {
+    m_flowFinity.clearEndPoints();
+    m_paths.clear();
+  }
+
   m_flowFinity.addEndPoints(endpoints, m_obstacles);
-  m_path = m_flowFinity.getDisjkstraPath(start, end);
-  m_pathDisplay = PathDisplay(m_path);
-  m_pathDisplay.create();
+  m_flowFinity.getDisjkstraPaths(m_paths);
+  std::vector<glm::vec3> colors = {glm::vec3(1, 1, 1), glm::vec3(0, 1, 0),
+                                   glm::vec3(0, 0, 1)};
+  int i = 0;
+  for (auto &path : m_paths) {
+    m_pathDisplay.push_back(PathDisplay(path));
+    m_pathDisplay.back().setColor(colors[i]);
+    m_pathDisplay.back().create();
+    i++;
+  }
   m_drawPath = true;
 }
 
@@ -226,16 +244,20 @@ void Editor::paint() {
   glColor4f(0, 1, 0, 1);
   glEnd();
 
-  glBegin(GL_LINES);
-  for (auto &edge : m_flowFinity.getEdges()) {
-    glColor3f(0, 1, 0);
-    glVertex3f(edge.first.x, 0, edge.first.y);
-    glVertex3f(edge.second.x, 0, edge.second.y);
+  if (m_graphCreated) {
+    glBegin(GL_LINES);
+    for (auto &edge : m_flowFinity.getEdges()) {
+      glColor3f(0, 1, 0);
+      glVertex3f(edge.first.x, 0, edge.first.y);
+      glVertex3f(edge.second.x, 0, edge.second.y);
+    }
+    glEnd();
   }
-  glEnd();
 
   if (m_drawPath) {
-    m_prog_flat.draw(m_pathDisplay);
+    for (auto &path : m_pathDisplay) {
+      m_prog_flat.draw(path);
+    }
   }
 }
 

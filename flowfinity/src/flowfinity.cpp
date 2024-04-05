@@ -138,6 +138,7 @@ void FlowFinity::clearEndPoints() {
   for (int waypoint : m_waypoints) {
     m_NodeToPoint.erase(m_PointToNode[waypoint]);
     m_PointToNode.erase(waypoint);
+    m_graph.removeVertex(waypoint);
   }
   m_nextVertex -= m_waypoints.size();
   m_waypoints.clear();
@@ -170,15 +171,19 @@ void FlowFinity::addEndPoints(
       m_waypoints.push_back(m_nextVertex);
     }
 
+    // Add endpoint pair to endPoints list
+    m_endPoints.push_back(
+        std::pair<int, int>(m_NodeToPoint[start], m_NodeToPoint[end]));
+
     m_graph.addVertices(2);
 
-    // Create an edge between the two endpoints if they are visible
-    if (Obstacle::isVisibleExternal(start, end, obstacles)) {
-      m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[end],
-                      glm::distance(start, end));
-      edges.push_back(std::pair<glm::vec2, glm::vec2>(
-          glm::vec2(start.x, start.z), glm::vec2(end.x, end.z)));
-    }
+    // // Create an edge between the two endpoints if they are visible
+    // if (Obstacle::isVisibleExternal(start, end, obstacles)) {
+    //   m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[end],
+    //                   glm::distance(start, end));
+    //   edges.push_back(std::pair<glm::vec2, glm::vec2>(
+    //       glm::vec2(start.x, start.z), glm::vec2(end.x, end.z)));
+    // }
 
     // For each obstacle, check if the edge between the start and end point to
     // each obstacle point is visible, if so create an edge
@@ -299,124 +304,96 @@ int minDistance(int dist[], bool sptSet[], int V) {
   return min_index;
 }
 
-std::vector<glm::vec3> FlowFinity::getDisjkstraPath(glm::vec3 start,
-                                                    glm::vec3 end) {
-  std::vector<glm::vec3> path;
-  int src, dst;
-  // Try to find the start and end points in the map, otherwise, go through map
-  // to find the closest point
-  if (m_NodeToPoint.find(start) != m_NodeToPoint.end()) {
-    src = m_NodeToPoint[start];
-  } else {
-    float minDist = INT_MAX;
-    for (auto &point : m_NodeToPoint) {
-      float dist = glm::distance(glm::vec2(start.x, start.z),
-                                 glm::vec2(point.first.x, point.first.z));
-      if (dist < minDist) {
-        minDist = dist;
-        src = point.second;
+void FlowFinity::getDisjkstraPaths(std::vector<std::vector<glm::vec3>> &paths) {
+  for (auto &pathPoint : m_endPoints) {
+    std::vector<glm::vec3> path;
+    int src = pathPoint.first;
+    int dst = pathPoint.second;
+
+    int nVertices = m_graph.getVertices();
+
+    // shortestDistances[i] will hold the shortest distance from src to i
+    std::vector<float> shortestDistances(nVertices);
+
+    // visited[i] will be true if the vertex has been visited by the algorithm
+    std::vector<bool> visited(nVertices);
+
+    // Initialize all distances as
+    // INFINITE and added[] as false
+    for (int vertexIndex = 0; vertexIndex < nVertices; vertexIndex++) {
+      shortestDistances[vertexIndex] = INT_MAX;
+      visited[vertexIndex] = false;
+    }
+
+    // Distance of source vertex from
+    // itself is always 0
+    shortestDistances[src] = 0;
+
+    // Parent array to store shortest
+    // path tree
+    std::vector<int> parents(nVertices);
+
+    // The starting vertex does not have a parent
+    parents[src] = -1;
+
+    // The source has been visited
+    visited[src] = true;
+
+    // Starting from source, go through each vertex
+    int curr = src;
+    for (int i = 1; i < nVertices; i++) {
+      // For each vertex, go through all the edges
+      for (int j = 0; j < nVertices; j++) {
+        // If the vertex is not visited and the distance is less than the
+        // shortest distance
+        if (!visited[j] && m_graph.getEdge(curr, j) != 0 &&
+            shortestDistances[curr] + m_graph.getEdge(curr, j) <
+                shortestDistances[j]) {
+          // Update the shortest distance
+          shortestDistances[j] =
+              shortestDistances[curr] + m_graph.getEdge(curr, j);
+          // Update the parent
+          parents[j] = curr;
+        }
       }
-    }
-  }
 
-  if (m_NodeToPoint.find(end) != m_NodeToPoint.end()) {
-    dst = m_NodeToPoint[end];
-  } else {
-    float minDist = INT_MAX;
-    for (auto &point : m_NodeToPoint) {
-      float dist = glm::distance(glm::vec2(end.x, end.z),
-                                 glm::vec2(point.first.x, point.first.z));
-      if (dist < minDist) {
-        minDist = dist;
-        dst = point.second;
+      // Find the vertex with the smallest distance
+      int nextVertex = -1;
+      float minDistance = INT_MAX;
+      for (int j = 0; j < nVertices; j++) {
+        if (!visited[j] && shortestDistances[j] < minDistance) {
+          nextVertex = j;
+          minDistance = shortestDistances[j];
+        }
       }
-    }
-  }
 
-  int nVertices = m_graph.getVertices();
-
-  // shortestDistances[i] will hold the shortest distance from src to i
-  std::vector<float> shortestDistances(nVertices);
-
-  // visited[i] will be true if the vertex has been visited by the algorithm
-  std::vector<bool> visited(nVertices);
-
-  // Initialize all distances as
-  // INFINITE and added[] as false
-  for (int vertexIndex = 0; vertexIndex < nVertices; vertexIndex++) {
-    shortestDistances[vertexIndex] = INT_MAX;
-    visited[vertexIndex] = false;
-  }
-
-  // Distance of source vertex from
-  // itself is always 0
-  shortestDistances[src] = 0;
-
-  // Parent array to store shortest
-  // path tree
-  std::vector<int> parents(nVertices);
-
-  // The starting vertex does not have a parent
-  parents[src] = -1;
-
-  // The source has been visited
-  visited[src] = true;
-
-  // Starting from source, go through each vertex
-  int curr = src;
-  for (int i = 1; i < nVertices; i++) {
-    // For each vertex, go through all the edges
-    for (int j = 0; j < nVertices; j++) {
-      // If the vertex is not visited and the distance is less than the
-      // shortest distance
-      if (!visited[j] && m_graph.getEdge(curr, j) != 0 &&
-          shortestDistances[curr] + m_graph.getEdge(curr, j) <
-              shortestDistances[j]) {
-        // Update the shortest distance
-        shortestDistances[j] =
-            shortestDistances[curr] + m_graph.getEdge(curr, j);
-        // Update the parent
-        parents[j] = curr;
+      // If there is no next vertex, break
+      if (nextVertex == -1) {
+        break;
       }
+
+      // Mark the vertex as visited
+      visited[nextVertex] = true;
+      curr = nextVertex;
     }
 
-    // Find the vertex with the smallest distance
-    int nextVertex = -1;
-    float minDistance = INT_MAX;
-    for (int j = 0; j < nVertices; j++) {
-      if (!visited[j] && shortestDistances[j] < minDistance) {
-        nextVertex = j;
-        minDistance = shortestDistances[j];
-      }
+    int i = dst;
+    while (i != -1) {
+      path.push_back(m_PointToNode[i]);
+      i = parents[i];
     }
 
-    // If there is no next vertex, break
-    if (nextVertex == -1) {
-      break;
+    std::reverse(path.begin(), path.end());
+
+    // std::cout << src << ", " << dst << std::endl;
+
+    for (auto &i : parents) {
+      // std::cout << i << ", " << std::endl;
     }
 
-    // Mark the vertex as visited
-    visited[nextVertex] = true;
-    curr = nextVertex;
+    for (auto &i : path) {
+      std::cout << i.x << ", " << i.y << ", " << i.z << std::endl;
+    }
+    paths.push_back(path);
   }
-
-  int i = dst;
-  while (i != -1) {
-    path.push_back(m_PointToNode[i]);
-    i = parents[i];
-  }
-
-  std::reverse(path.begin(), path.end());
-
-  // std::cout << src << ", " << dst << std::endl;
-
-  for (auto &i : parents) {
-    // std::cout << i << ", " << std::endl;
-  }
-
-  for (auto &i : path) {
-    std::cout << i.x << ", " << i.y << ", " << i.z << std::endl;
-  }
-
-  return path;
 }

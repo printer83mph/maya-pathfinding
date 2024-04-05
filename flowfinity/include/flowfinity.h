@@ -41,7 +41,7 @@ public:
 
   void clearEndPoints();
 
-  std::vector<glm::vec3> getDisjkstraPath(glm::vec3 start, glm::vec3 end);
+  void getDisjkstraPaths(std::vector<std::vector<glm::vec3>> &);
 
 private:
   struct Config {
@@ -67,6 +67,7 @@ private:
   std::unordered_map<int, glm::vec3> m_PointToNode;
   std::vector<std::pair<glm::vec2, glm::vec2>> edges;
   std::vector<int> m_waypoints;
+  std::vector<std::pair<int, int>> m_endPoints;
 
   void addAgent(float x, float y);
   void addAgent(const glm::vec2 &pos);

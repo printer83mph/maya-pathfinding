@@ -9,16 +9,18 @@
 PathDisplay::PathDisplay() : Drawable(), m_path() {}
 
 PathDisplay::PathDisplay(const std::vector<glm::vec3> &path)
-    : Drawable(), m_path(path) {}
+    : Drawable(), m_path(path), m_color(1, 1, 1) {}
 
 PathDisplay::~PathDisplay() {}
+
+void PathDisplay::setColor(const glm::vec3 &color) { m_color = color; }
 
 void PathDisplay::create() {
   std::vector<glm::vec4> pos{}, col{};
 
   for (auto &point : m_path) {
     pos.push_back(glm::vec4(point, 1));
-    col.push_back(glm::vec4(1, 1, 1, 1));
+    col.push_back(glm::vec4(m_color, 1));
   }
 
   std::vector<GLuint> idx{};

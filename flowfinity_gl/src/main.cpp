@@ -16,6 +16,7 @@
 #include "imgui_impl_sdl2.h"
 #include <GL/glew.h>
 #include <SDL.h>
+#include <string>
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
@@ -208,8 +209,14 @@ int main(int, char **) {
       static float trans[2] = {0.0f, 0.0f};
       static float scale[2] = {1.0f, 1.0f};
       static float rotation = 0.0f;
-      static float start[2] = {0.0f, 0.0f};
-      static float end[2] = {0.0f, 0.0f};
+
+      // for 3 paths
+      static float path1start[2] = {0.0f, 0.0f};
+      static float path1end[2] = {0.0f, 0.0f};
+      static float path2start[2] = {0.0f, 0.0f};
+      static float path2end[2] = {0.0f, 0.0f};
+      static float path3start[2] = {0.0f, 0.0f};
+      static float path3end[2] = {0.0f, 0.0f};
 
       ImGui::Begin("Add Obstacles!"); // Create a window called "Hello, world!"
                                       // and append into it.
@@ -230,17 +237,55 @@ int main(int, char **) {
 
       ImGui::SameLine();
       if (ImGui::Button(
+              "Clear Obstacles")) // Buttons return true when clicked (most
+                                  // widgets return true when edited/activated)
+        editor.clearObstacles();
+
+      if (ImGui::Button(
               "Create Graph")) // Buttons return true when clicked (most
                                // widgets return true when edited/activated)
         editor.createGraph();
 
-      ImGui::InputFloat2("Start", start);
-      ImGui::InputFloat2("End", end);
+      ImGui::Spacing();
+      ImGui::Text(
+          "Add the endpoints of the path you want to find and click Find Path");
+      ImGui::Spacing();
+      {
+        ImGui::InputFloat2(("Start #" + std::to_string(1)).c_str(), path1start);
+        ImGui::InputFloat2(("End #" + std::to_string(1)).c_str(), path1end);
+        ImGui::Spacing();
+
+        ImGui::InputFloat2(("Start #" + std::to_string(2)).c_str(), path2start);
+        ImGui::InputFloat2(("End #" + std::to_string(2)).c_str(), path2end);
+        ImGui::Spacing();
+
+        ImGui::InputFloat2(("Start #" + std::to_string(3)).c_str(), path3start);
+        ImGui::InputFloat2(("End #" + std::to_string(3)).c_str(), path3end);
+        ImGui::Spacing();
+      }
+
+      // if (ImGui::Button(
+      //         "Add Path")) // Buttons return true when clicked (most
+      //                      // widgets return true when edited/activated)
+      // {
+      //   numPaths++;
+      //   editor.m_starts.push_back({0.0f, 0.0f});
+      //   editor.m_ends.push_back({0.0f, 0.0f});
+      // }
+
       if (ImGui::Button(
-              "Find Path")) // Buttons return true when clicked (most
-                            // widgets return true when edited/activated)
-        editor.getDisjkstraPath(glm::vec3(start[0], 0, start[1]),
-                                glm::vec3(end[0], 0, end[1]));
+              "Find Paths")) // Buttons return true when clicked (most
+                             // widgets return true when edited/activated)
+      {
+        std::vector<std::pair<glm::vec3, glm::vec3>> endPoints;
+        endPoints.push_back({glm::vec3(path1start[0], 0, path1start[1]),
+                             glm::vec3(path1end[0], 0, path1end[1])});
+        endPoints.push_back({glm::vec3(path2start[0], 0, path2start[1]),
+                             glm::vec3(path2end[0], 0, path2end[1])});
+        endPoints.push_back({glm::vec3(path3start[0], 0, path3start[1]),
+                             glm::vec3(path3end[0], 0, path3end[1])});
+        editor.getDisjkstraPath(endPoints);
+      }
 
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                   1000.0f / io.Framerate, io.Framerate);
