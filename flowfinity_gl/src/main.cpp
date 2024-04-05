@@ -208,6 +208,8 @@ int main(int, char **) {
       static float trans[2] = {0.0f, 0.0f};
       static float scale[2] = {1.0f, 1.0f};
       static float rotation = 0.0f;
+      static float start[2] = {0.0f, 0.0f};
+      static float end[2] = {0.0f, 0.0f};
 
       ImGui::Begin("Add Obstacles!"); // Create a window called "Hello, world!"
                                       // and append into it.
@@ -232,12 +234,13 @@ int main(int, char **) {
                                // widgets return true when edited/activated)
         editor.createGraph();
 
-      static int numAgents = 4;
-
-      ImGui::SliderInt("Count", &numAgents, 1, 5);
-
-      if (ImGui::Button("Spawn Agents"))
-        editor.addActors(numAgents);
+      ImGui::InputFloat2("Start", start);
+      ImGui::InputFloat2("End", end);
+      if (ImGui::Button(
+              "Find Path")) // Buttons return true when clicked (most
+                            // widgets return true when edited/activated)
+        editor.getDisjkstraPath(glm::vec3(start[0], 0, start[1]),
+                                glm::vec3(end[0], 0, end[1]));
 
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                   1000.0f / io.Framerate, io.Framerate);

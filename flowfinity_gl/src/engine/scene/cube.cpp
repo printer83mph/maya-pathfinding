@@ -72,3 +72,5 @@ void Cube::create() {
   glBufferData(GL_ARRAY_BUFFER, nor.size() * sizeof(glm::vec4), nor.data(),
                GL_STATIC_DRAW);
 }
+
+GLenum Cube::drawMode() { return GL_TRIANGLES; }

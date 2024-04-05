@@ -22,12 +22,17 @@ public:
   bool isVisible(const glm::vec3 &externalPoint, const glm::vec3 &obstaclePoint,
                  const std::vector<Obstacle> &) const;
 
+  static bool isVisibleExternal(const glm::vec3 &start, const glm::vec3 &end,
+                                const std::vector<Obstacle> &obstacleList);
+
   static bool intersects(const Edge edge1, const Edge edge2);
-  const bool equals(const Obstacle &other) const;
+  const int getBoundsCount() const;
+  const glm::vec4 getBoundingBox() const;
 
 private:
   std::vector<Edge> bounds;
   // A bounding box containing the obstacle for quick collision detection.
   // The data is stored as (minX, minY, maxX, maxY).
   glm::vec4 boundingBox;
+  int boundsCount;
 };

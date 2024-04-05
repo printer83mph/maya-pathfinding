@@ -11,6 +11,7 @@ public:
   ~Cube();
 
   void create() override;
+  GLenum drawMode() override;
 
 private:
   float x, y, z;

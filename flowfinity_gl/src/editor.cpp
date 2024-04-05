@@ -1,4 +1,7 @@
 #include "editor.h"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/vector_float3.hpp"
+#include "obstacle.h"
 
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/geometric.hpp"
@@ -18,7 +21,8 @@
 
 Editor::Editor()
     : m_square(), m_cube(), m_prog_flat(), m_prog_lambert(), m_obstacles(),
-      m_flowFinity(), m_cubeTransforms(), m_camera() {}
+      m_pathDisplay(), m_flowFinity(), m_cubeTransforms(), m_camera(),
+      m_drawPath(false) {}
 
 Editor::~Editor() {
   glDeleteVertexArrays(1, &vao);
@@ -55,6 +59,18 @@ void Editor::addCubeObstacle(glm::vec2 translation, glm::vec2 scale,
                          glm::vec3(pos_data[3][0], 0, pos_data[3][1])});
   obstacle.addBound(Edge{glm::vec3(pos_data[3][0], 0, pos_data[3][1]),
                          glm::vec3(pos_data[0][0], 0, pos_data[0][1])});
+  // if the created obstacle is not already in the same obstacle (same bounds),
+  // then add it
+  for (auto &obstacleInList : m_obstacles) {
+    glm::vec4 boundingBox = obstacle.getBoundingBox();
+    glm::vec4 boundingBoxInList = obstacleInList.getBoundingBox();
+    if (boundingBox.x == boundingBoxInList.x &&
+        boundingBox.y == boundingBoxInList.y &&
+        boundingBox.z == boundingBoxInList.z &&
+        boundingBox.w == boundingBoxInList.w) {
+      return;
+    }
+  }
   m_obstacles.push_back(obstacle);
 }
 
@@ -70,6 +86,16 @@ void Editor::addActors(int numAgents) {
 }
 
 void Editor::createGraph() { m_flowFinity.createGraph(m_obstacles); }
+
+void Editor::getDisjkstraPath(glm::vec3 start, glm::vec3 end) {
+  std::vector<std::pair<glm::vec3, glm::vec3>> endpoints;
+  endpoints.push_back(std::make_pair(start, end));
+  m_flowFinity.addEndPoints(endpoints, m_obstacles);
+  m_path = m_flowFinity.getDisjkstraPath(start, end);
+  m_pathDisplay = PathDisplay(m_path);
+  m_pathDisplay.create();
+  m_drawPath = true;
+}
 
 int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
   mp_window = window;
@@ -91,6 +117,7 @@ int Editor::initialize(SDL_Window *window, SDL_GLContext gl_context) {
   }
 
   // Set a few settings/modes in OpenGL rendering
+  glEnable(GL_COLOR_MATERIAL);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_POLYGON_SMOOTH);
@@ -182,20 +209,29 @@ void Editor::paint() {
   glDisable(GL_DEPTH_TEST);
   m_prog_flat.setModelMatrix(glm::mat4(1.f));
 
+  glDisable(GL_TEXTURE_2D);
+  glDisable(GL_LIGHTING);
+  glColor4f(0, 1, 0, 1);
   glBegin(GL_POINTS);
   for (auto &obstacle : m_obstacles) {
     for (auto &bound : obstacle.getBounds()) {
       glVertex3f(bound.point2.x, 0, bound.point2.z);
     }
   }
+  glColor4f(0, 1, 0, 1);
   glEnd();
 
   glBegin(GL_LINES);
   for (auto &edge : m_flowFinity.getEdges()) {
+    glColor3f(0, 1, 0);
     glVertex3f(edge.first.x, 0, edge.first.y);
     glVertex3f(edge.second.x, 0, edge.second.y);
   }
   glEnd();
+
+  if (m_drawPath) {
+    m_prog_flat.draw(m_pathDisplay);
+  }
 }
 
 void Editor::processEvent(const SDL_Event &event) {
