@@ -31,6 +31,7 @@ public:
 
   void addAgent(const glm::vec2 &pos, const glm::vec2 &target);
   void removeAgent(int index);
+  void setAgentTarget(int index, const glm::vec2 &target);
 
   float getEdgeWeight(glm::vec2 point1, glm::vec2 point2);
   void createGraph(const std::vector<Obstacle> &obstacles);
@@ -40,6 +41,9 @@ public:
   const std::vector<std::pair<glm::vec2, glm::vec2>> &getEdges() const;
 
   std::vector<glm::vec3> getDisjkstraPath(glm::vec3 start, glm::vec3 end);
+
+  void drawPoints() const;
+  void drawVelocities() const;
 
 private:
   struct Config {

@@ -1,16 +1,16 @@
 #include "flowfinity.h"
-#include "glm/geometric.hpp"
-
-#include "glm/fwd.hpp"
-#include "glm/gtc/constants.hpp"
 #include "rvo.h"
 
+#include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
+#include "glm/gtc/constants.hpp"
 #include "glm/trigonometric.hpp"
+#include <GL/glew.h>
 
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <vector>
 
 FlowFinity::FlowFinity()
     : m_config(), m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_possibleAccels(),
@@ -81,6 +81,13 @@ void FlowFinity::removeAgent(int index) {
   m_rvoPos.erase(std::next(m_rvoPos.begin(), index));
   m_rvoVel.erase(std::next(m_rvoVel.begin(), index));
   m_rvoTarget.erase(std::next(m_rvoTarget.begin(), index));
+}
+
+void FlowFinity::setAgentTarget(int index, const glm::vec2 &target) {
+  if (index >= m_rvoPos.size()) {
+    throw "index out of bounds lol";
+  }
+  m_rvoTarget[index] = target;
 }
 
 glm::vec2 FlowFinity::findOptimalAcceleration(int index, float dt) const {
@@ -417,4 +424,26 @@ std::vector<glm::vec3> FlowFinity::getDisjkstraPath(glm::vec3 start,
   }
 
   return path;
+}
+
+void FlowFinity::drawPoints() const {
+  glBegin(GL_POINTS);
+  for (auto &pos : m_rvoPos) {
+    glVertex3f(pos.x, 0, pos.y);
+  }
+  glEnd();
+}
+
+void FlowFinity::drawVelocities() const {
+  glBegin(GL_LINES);
+  for (int i = 0; i < size(); ++i) {
+    const auto &pos = m_rvoPos[i];
+    const auto &vel = m_rvoVel[i];
+    auto end = pos + vel * 0.5f;
+    glColor3f(0, 0, 1);
+    glVertex3f(pos.x, 0, pos.y);
+    glColor3f(0, 0, 1);
+    glVertex3f(end.x, 0, end.y);
+  }
+  glEnd();
 }
