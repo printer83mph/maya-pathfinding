@@ -49,6 +49,7 @@ private:
   PathDisplay m_pathDisplay;
 
   bool m_drawPath;
+  bool m_graphCreated;
 
   std::vector<Obstacle> m_obstacles;
   std::vector<CubeTransform> m_cubeTransforms;

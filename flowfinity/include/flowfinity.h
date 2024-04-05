@@ -39,6 +39,8 @@ public:
                const std::vector<Obstacle> &obstacles);
   const std::vector<std::pair<glm::vec2, glm::vec2>> &getEdges() const;
 
+  void clearEndPoints();
+
   std::vector<glm::vec3> getDisjkstraPath(glm::vec3 start, glm::vec3 end);
 
 private:
@@ -60,9 +62,13 @@ private:
 
   // Graph logic
   int m_nextVertex;
-  int m_totalWaypoints;
   Graph m_graph;
   std::unordered_map<glm::vec3, int, std::hash<glm::vec3>> m_NodeToPoint;
   std::unordered_map<int, glm::vec3> m_PointToNode;
   std::vector<std::pair<glm::vec2, glm::vec2>> edges;
+  std::vector<int> m_waypoints;
+
+  void addAgent(float x, float y);
+  void addAgent(const glm::vec2 &pos);
+  void removeAgent(size_t index);
 };

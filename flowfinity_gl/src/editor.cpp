@@ -22,7 +22,7 @@
 Editor::Editor()
     : m_square(), m_cube(), m_prog_flat(), m_prog_lambert(), m_obstacles(),
       m_pathDisplay(), m_flowFinity(), m_cubeTransforms(), m_camera(),
-      m_drawPath(false) {}
+      m_drawPath(false), m_graphCreated(false) {}
 
 Editor::~Editor() {
   glDeleteVertexArrays(1, &vao);
@@ -85,9 +85,14 @@ void Editor::addActors(int numAgents) {
   }
 }
 
-void Editor::createGraph() { m_flowFinity.createGraph(m_obstacles); }
+void Editor::createGraph() {
+  m_flowFinity.createGraph(m_obstacles);
+  m_graphCreated = true;
+}
 
 void Editor::getDisjkstraPath(glm::vec3 start, glm::vec3 end) {
+  if (!m_graphCreated)
+    createGraph();
   std::vector<std::pair<glm::vec3, glm::vec3>> endpoints;
   endpoints.push_back(std::make_pair(start, end));
   m_flowFinity.addEndPoints(endpoints, m_obstacles);

@@ -1,4 +1,5 @@
 #include "flowfinity.h"
+#include "glm/ext/vector_float3.hpp"
 #include "glm/geometric.hpp"
 
 #include "glm/fwd.hpp"
@@ -14,7 +15,8 @@
 
 FlowFinity::FlowFinity()
     : m_config(), m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_possibleAccels(),
-      m_nextVertex(-1), m_graph(0), m_NodeToPoint(), m_PointToNode(), edges() {
+      m_nextVertex(-1), m_graph(0), m_NodeToPoint(), m_PointToNode(), edges(),
+      m_waypoints() {
   float angle = 0.f;
   m_possibleAccels[32] = glm::vec2(0, 0);
   for (int i = 0; i < 16; ++i) {
@@ -132,11 +134,19 @@ FlowFinity::getEdges() const {
   return edges;
 }
 
+void FlowFinity::clearEndPoints() {
+  for (int waypoint : m_waypoints) {
+    m_NodeToPoint.erase(m_PointToNode[waypoint]);
+    m_PointToNode.erase(waypoint);
+  }
+  m_nextVertex -= m_waypoints.size();
+  m_waypoints.clear();
+}
+
 // Add endpoints to the graph and create edges between them and the obstacles
 void FlowFinity::addEndPoints(
     const std::vector<std::pair<glm::vec3, glm::vec3>> &endPoints,
     const std::vector<Obstacle> &obstacles) {
-  // TODO
   int totalNodes = 0;
 
   // For each pair of endpoints
@@ -150,25 +160,17 @@ void FlowFinity::addEndPoints(
       m_NodeToPoint[start] = m_nextVertex;
       m_PointToNode[m_nextVertex] = start;
       totalNodes++;
+      m_waypoints.push_back(m_nextVertex);
     }
     if (m_NodeToPoint.find(end) == m_NodeToPoint.end()) {
       m_nextVertex++;
       m_NodeToPoint[end] = m_nextVertex;
       m_PointToNode[m_nextVertex] = end;
       totalNodes++;
+      m_waypoints.push_back(m_nextVertex);
     }
 
-    // With the total unique endpoints, add them to the map
-    m_graph.vertices = m_graph.vertices + totalNodes;
-    // Add the new rows
-    for (int i = 0; i < totalNodes; i++) {
-      m_graph.adjMatrix.push_back(std::vector<float>());
-      m_graph.adjMatrix.back().resize(m_graph.vertices);
-    }
-    // Update the old rows
-    for (int i = 0; i < m_graph.vertices - totalNodes; i++) {
-      m_graph.adjMatrix[i].resize(m_graph.vertices);
-    }
+    m_graph.addVertices(2);
 
     // Create an edge between the two endpoints if they are visible
     if (Obstacle::isVisibleExternal(start, end, obstacles)) {
