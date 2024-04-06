@@ -10,7 +10,7 @@ public:
   void removeEdge(int src, int dest);
   float getEdge(int src, int dest) const;
   const int getVertices() const;
-  void removeVertex(int vertex);
+  void removeVertices(std::vector<int> vertices);
   void addVertices(int vertices);
 
   friend class FlowFinity;

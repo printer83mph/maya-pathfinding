@@ -3,8 +3,9 @@
 Graph::Graph(int vertices) : vertices(vertices), adjMatrix() {
   for (int i = 0; i < vertices; i++) {
     adjMatrix.push_back(std::vector<float>());
-    for (int j = 0; j < vertices; j++)
+    for (int j = 0; j < vertices; j++) {
       adjMatrix.back().push_back(0);
+    }
   }
 }
 
@@ -13,10 +14,17 @@ void Graph::addEdge(int src, int dest, float weight) {
   adjMatrix.at(dest).at(src) = weight;
 }
 
-void Graph::removeVertex(int vertex) {
-  adjMatrix.erase(adjMatrix.begin() + vertex);
-  for (auto &row : adjMatrix)
-    row.erase(row.begin() + vertex);
+void Graph::removeVertices(std::vector<int> verticesToDel) {
+  // sort the array by integer value
+  std::sort(verticesToDel.begin(), verticesToDel.end());
+  // remove the vertices in reverse order
+  for (int i = verticesToDel.size() - 1; i >= 0; i--) {
+    for (auto &row : adjMatrix) {
+      row.erase(row.begin() + verticesToDel[i]);
+    }
+    adjMatrix.erase(adjMatrix.begin() + verticesToDel[i]);
+    vertices--;
+  }
 }
 
 void Graph::addVertices(int verticesInput) {

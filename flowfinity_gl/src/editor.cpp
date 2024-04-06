@@ -93,6 +93,9 @@ void Editor::addActors(int numAgents) {
 }
 
 void Editor::createGraph() {
+  m_flowFinity.clearEndPoints();
+  m_paths.clear();
+  m_pathDisplay.clear();
   m_flowFinity.createGraph(m_obstacles);
   m_graphCreated = true;
 }
@@ -105,6 +108,7 @@ void Editor::getDisjkstraPath(
   if (m_drawPath) {
     m_flowFinity.clearEndPoints();
     m_paths.clear();
+    m_pathDisplay.clear();
   }
 
   m_flowFinity.addEndPoints(endpoints, m_obstacles);

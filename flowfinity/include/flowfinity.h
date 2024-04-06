@@ -73,6 +73,8 @@ private:
   std::vector<int> m_waypoints;
   std::vector<std::pair<int, int>> m_endPoints;
 
+  void addPoint(const glm::vec3 &point);
+
   void addAgent(float x, float y);
   void addAgent(const glm::vec2 &pos);
   void removeAgent(size_t index);

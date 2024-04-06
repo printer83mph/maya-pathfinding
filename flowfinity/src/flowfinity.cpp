@@ -149,12 +149,22 @@ FlowFinity::getEdges() const {
 
 void FlowFinity::clearEndPoints() {
   for (int waypoint : m_waypoints) {
+    edges.erase(std::remove_if(
+                    edges.begin(), edges.end(),
+                    [this, waypoint](auto &e) {
+                      return e.first == glm::vec2(m_PointToNode[waypoint].x,
+                                                  m_PointToNode[waypoint].z) ||
+                             e.second == glm::vec2(m_PointToNode[waypoint].x,
+                                                   m_PointToNode[waypoint].z);
+                    }),
+                edges.end());
     m_NodeToPoint.erase(m_PointToNode[waypoint]);
     m_PointToNode.erase(waypoint);
-    m_graph.removeVertex(waypoint);
   }
+  m_graph.removeVertices(m_waypoints);
   m_nextVertex -= m_waypoints.size();
   m_waypoints.clear();
+  m_endPoints.clear();
 }
 
 // Add endpoints to the graph and create edges between them and the obstacles
@@ -190,13 +200,13 @@ void FlowFinity::addEndPoints(
 
     m_graph.addVertices(2);
 
-    // // Create an edge between the two endpoints if they are visible
-    // if (Obstacle::isVisibleExternal(start, end, obstacles)) {
-    //   m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[end],
-    //                   glm::distance(start, end));
-    //   edges.push_back(std::pair<glm::vec2, glm::vec2>(
-    //       glm::vec2(start.x, start.z), glm::vec2(end.x, end.z)));
-    // }
+    // Create an edge between the two endpoints if they are visible
+    if (Obstacle::isVisibleExternal(start, end, obstacles)) {
+      m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[end],
+                      glm::distance(start, end));
+      edges.push_back(std::pair<glm::vec2, glm::vec2>(
+          glm::vec2(start.x, start.z), glm::vec2(end.x, end.z)));
+    }
 
     // For each obstacle, check if the edge between the start and end point to
     // each obstacle point is visible, if so create an edge
@@ -219,6 +229,14 @@ void FlowFinity::addEndPoints(
         }
       }
     }
+  }
+}
+
+void FlowFinity::addPoint(const glm::vec3 &point) {
+  if (m_NodeToPoint.find(point) == m_NodeToPoint.end()) {
+    m_nextVertex++;
+    m_NodeToPoint[point] = m_nextVertex;
+    m_PointToNode[m_nextVertex] = point;
   }
 }
 
@@ -252,21 +270,10 @@ void FlowFinity::createGraph(const std::vector<Obstacle> &obstacles) {
           // If the two edges are visible to each other, add an edge to the map
           if (obstacle.isVisible(edge2.point1, edge.point1, obstacles)) {
             // If either of the points are not in the map, add them
-            bool point1Exists =
-                m_NodeToPoint.find(edge.point1) != m_NodeToPoint.end();
-            bool point2Exists =
-                m_NodeToPoint.find(edge2.point1) != m_NodeToPoint.end();
-
-            if (!point1Exists) {
-              m_nextVertex++;
-              m_NodeToPoint[edge.point1] = m_nextVertex;
-              m_PointToNode[m_nextVertex] = edge.point1;
-            }
-            if (!point2Exists) {
-              m_nextVertex++;
-              m_NodeToPoint[edge2.point1] = m_nextVertex;
-              m_PointToNode[m_nextVertex] = edge2.point1;
-            }
+            addPoint(edge.point1);
+            addPoint(edge2.point1);
+            addPoint(edge.point2);
+            addPoint(edge2.point2);
             // Add the edge to the graph if the edges are not the same and the
             // edge doesn't already exist
             if (m_graph.getEdge(m_NodeToPoint[edge.point1],
