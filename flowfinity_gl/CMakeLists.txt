@@ -1,6 +1,8 @@
+# find dependencies
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(SDL2 REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
 
 # imgui source files
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/extern/imgui)
@@ -21,20 +23,21 @@ target_sources(flowfinityGl PRIVATE ${IMGUI_SOURCES})
 
 # include dirs
 target_include_directories(flowfinityGl PRIVATE
+  ${OPENGL_INCLUDE_DIRS}
+  ${GLEW_INCLUDE_DIRS}
+  ${GLM_INCLUDE_DIRS}
+  ${SDL2_INCLUDE_DIRS}
   ${IMGUI_DIR}
   ${IMGUI_DIR}/backends
-  ${SDL2_INCLUDE_DIRS}
-  ${GLEW_INCLUDE_DIRS}
-  ${OPENGL_INCLUDE_DIRS}
 )
 
 # link libraries
 target_link_libraries(flowfinityGl PRIVATE
   flowfinity
-  ${SDL2_LIBRARIES}
-  GLEW::glew
   ${OPENGL_LIBRARIES}
+  GLEW::glew
   glm::glm
+  ${SDL2_LIBRARIES}
 )
 
 # copy resources to build dir
