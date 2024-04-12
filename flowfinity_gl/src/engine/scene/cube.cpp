@@ -13,21 +13,20 @@ Cube::Cube(float x, float y, float z) : Drawable(), x(x), y(y), z(z) {}
 
 Cube::~Cube() {}
 
-void Cube::create() {
-  std::vector<glm::vec4> pos_data{
-      glm::vec4(-1, -1, -1, 1), glm::vec4(1, -1, -1, 1), glm::vec4(1, 1, -1, 1),
-      glm::vec4(-1, 1, -1, 1)};
+void Cube::create()
+{
+  std::vector<glm::vec4> pos_data{glm::vec4(-1, -1, -1, 1), glm::vec4(1, -1, -1, 1),
+                                  glm::vec4(1, 1, -1, 1), glm::vec4(-1, 1, -1, 1)};
 
   std::vector<glm::vec4> pos{
       glm::vec4(-1 + x, -1 + y, -1 + z, 1), glm::vec4(1 + x, -1 + y, -1 + z, 1),
       glm::vec4(1 + x, 1 + y, -1 + z, 1), glm::vec4(-1 + x, 1 + y, -1 + z, 1)};
 
-  std::vector<glm::vec4> nor{glm::vec4(0, 0, -1, 0), glm::vec4(0, 0, -1, 0),
-                             glm::vec4(0, 0, -1, 0), glm::vec4(0, 0, -1, 0)};
+  std::vector<glm::vec4> nor{glm::vec4(0, 0, -1, 0), glm::vec4(0, 0, -1, 0), glm::vec4(0, 0, -1, 0),
+                             glm::vec4(0, 0, -1, 0)};
 
-  std::vector<glm::vec4> col{
-      glm::vec4(0.5, 0.5, 0.5, 1), glm::vec4(0.5, 0.5, 0.5, 1),
-      glm::vec4(0.5, 0.5, 0.5, 1), glm::vec4(0.5, 0.5, 0.5, 1)};
+  std::vector<glm::vec4> col{glm::vec4(0.5, 0.5, 0.5, 1), glm::vec4(0.5, 0.5, 0.5, 1),
+                             glm::vec4(0.5, 0.5, 0.5, 1), glm::vec4(0.5, 0.5, 0.5, 1)};
 
   std::vector<GLuint> idx{0, 1, 2, 0, 2, 3};
 
@@ -54,23 +53,19 @@ void Cube::create() {
 
   m_attributes.idx.generate();
   m_attributes.idx.bind();
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, idx.size() * sizeof(GLuint), idx.data(),
-               GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, idx.size() * sizeof(GLuint), idx.data(), GL_STATIC_DRAW);
 
   m_attributes.pos.generate();
   m_attributes.pos.bind();
-  glBufferData(GL_ARRAY_BUFFER, pos.size() * sizeof(glm::vec4), pos.data(),
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, pos.size() * sizeof(glm::vec4), pos.data(), GL_STATIC_DRAW);
 
   m_attributes.col.generate();
   m_attributes.col.bind();
-  glBufferData(GL_ARRAY_BUFFER, col.size() * sizeof(glm::vec4), col.data(),
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, col.size() * sizeof(glm::vec4), col.data(), GL_STATIC_DRAW);
 
   m_attributes.nor.generate();
   m_attributes.nor.bind();
-  glBufferData(GL_ARRAY_BUFFER, nor.size() * sizeof(glm::vec4), nor.data(),
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, nor.size() * sizeof(glm::vec4), nor.data(), GL_STATIC_DRAW);
 }
 
 GLenum Cube::drawMode() { return GL_TRIANGLES; }

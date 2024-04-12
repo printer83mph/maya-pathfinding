@@ -1,18 +1,19 @@
 #include "drawable.h"
 
-Drawable::AttributeRef::AttributeRef(GLenum type)
-    : m_type(type), m_buffer(), m_isBound(false) {}
+Drawable::AttributeRef::AttributeRef(GLenum type) : m_type(type), m_buffer(), m_isBound(false) {}
 Drawable::AttributeRef::~AttributeRef() {}
 
 Drawable::Attributes::Attributes()
-    : idx(GL_ELEMENT_ARRAY_BUFFER), pos(GL_ARRAY_BUFFER), col(GL_ARRAY_BUFFER),
-      nor(GL_ARRAY_BUFFER) {}
+    : idx(GL_ELEMENT_ARRAY_BUFFER), pos(GL_ARRAY_BUFFER), col(GL_ARRAY_BUFFER), nor(GL_ARRAY_BUFFER)
+{
+}
 
 Drawable::Drawable() : m_count(-1), m_attributes() {}
 
 Drawable::~Drawable() {}
 
-void Drawable::destroy() {
+void Drawable::destroy()
+{
   m_attributes.idx.destroy();
   m_attributes.pos.destroy();
   m_attributes.col.destroy();

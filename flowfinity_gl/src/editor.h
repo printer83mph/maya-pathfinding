@@ -18,16 +18,17 @@ struct CubeTransform {
   float rotation;
 };
 
-class Editor {
+class Editor
+{
 public:
   Editor();
   ~Editor();
 
-  int initialize(SDL_Window *window, SDL_GLContext gl_context);
+  int initialize(SDL_Window* window, SDL_GLContext gl_context);
   void resize(int width, int height);
   void update(float dt);
   void paint();
-  void processEvent(const SDL_Event &event);
+  void processEvent(const SDL_Event& event);
   void addCubeObstacle(glm::vec2 translation, glm::vec2 scale, float rotation);
   void addActors(int numAgents);
   void createGraph();
@@ -35,7 +36,7 @@ public:
   void clearObstacles();
 
 private:
-  SDL_Window *mp_window;
+  SDL_Window* mp_window;
   int m_width;
   int m_height;
 

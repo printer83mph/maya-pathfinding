@@ -4,7 +4,8 @@
 
 #include <GL/glew.h>
 
-class Square : public Drawable {
+class Square : public Drawable
+{
 public:
   Square();
   ~Square();

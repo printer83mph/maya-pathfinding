@@ -2,8 +2,10 @@
 
 #include <GL/glew.h>
 
-class Drawable {
-  class AttributeRef {
+class Drawable
+{
+  class AttributeRef
+  {
   private:
     GLuint m_buffer;
     bool m_isBound;
@@ -15,16 +17,19 @@ class Drawable {
     ~AttributeRef();
 
     inline void bind() { glBindBuffer(m_type, m_buffer); }
-    inline bool tryBind() {
+    inline bool tryBind()
+    {
       if (m_isBound)
         bind();
       return m_isBound;
     }
-    inline void generate() {
+    inline void generate()
+    {
       m_isBound = true;
       glGenBuffers(1, &m_buffer);
     }
-    inline void destroy() {
+    inline void destroy()
+    {
       m_isBound = false;
       glDeleteBuffers(1, &m_buffer);
     }

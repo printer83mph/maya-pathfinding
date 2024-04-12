@@ -31,10 +31,10 @@
 #endif
 
 // Main code
-int main(int, char **) {
+int main(int, char**)
+{
   // Setup SDL
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) !=
-      0) {
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
     printf("Error: %s\n", SDL_GetError());
     return -1;
   }
@@ -42,23 +42,22 @@ int main(int, char **) {
   // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
   // GL ES 2.0 + GLSL 100
-  const char *glsl_version = "#version 100";
+  const char* glsl_version = "#version 100";
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #elif defined(__APPLE__)
   // GL 3.2 Core + GLSL 150
-  const char *glsl_version = "#version 150";
-  SDL_GL_SetAttribute(
-      SDL_GL_CONTEXT_FLAGS,
-      SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
+  const char* glsl_version = "#version 150";
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
+                      SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #else
   // GL 3.0 + GLSL 130
-  const char *glsl_version = "#version 130";
+  const char* glsl_version = "#version 130";
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -75,11 +74,9 @@ int main(int, char **) {
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
   SDL_WindowFlags window_flags =
-      (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE |
-                        SDL_WINDOW_ALLOW_HIGHDPI);
-  SDL_Window *window = SDL_CreateWindow(
-      "Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED,
-      SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+      (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+  SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED,
+                                        SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
   if (window == nullptr) {
     printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
     return -1;
@@ -92,12 +89,10 @@ int main(int, char **) {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
+  ImGuiIO& io = ImGui::GetIO();
   (void)io;
-  io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-  io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
@@ -181,8 +176,7 @@ int main(int, char **) {
 
       if (event.type == SDL_QUIT)
         done = true;
-      if (event.type == SDL_WINDOWEVENT &&
-          event.window.event == SDL_WINDOWEVENT_CLOSE &&
+      if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
           event.window.windowID == SDL_GetWindowID(window))
         done = true;
     }
@@ -221,34 +215,29 @@ int main(int, char **) {
       ImGui::Begin("Add Obstacles!"); // Create a window called "Hello, world!"
                                       // and append into it.
 
-      ImGui::Text(
-          "Drag the sliders to adjust transformations."); // Display some text
-                                                          // (you can use a
-                                                          // format strings too)
+      ImGui::Text("Drag the sliders to adjust transformations."); // Display some text
+                                                                  // (you can use a
+                                                                  // format strings too)
       ImGui::InputFloat2("Translation", trans);
       ImGui::InputFloat2("Scale", scale);
       ImGui::SliderFloat("Rotation", &rotation, 0.0f, 360.0f);
 
-      if (ImGui::Button(
-              "Create Obstacle")) // Buttons return true when clicked (most
-                                  // widgets return true when edited/activated)
-        editor.addCubeObstacle(glm::vec2(trans[0], trans[1]),
-                               glm::vec2(scale[0], scale[1]), rotation);
+      if (ImGui::Button("Create Obstacle")) // Buttons return true when clicked (most
+                                            // widgets return true when edited/activated)
+        editor.addCubeObstacle(glm::vec2(trans[0], trans[1]), glm::vec2(scale[0], scale[1]),
+                               rotation);
 
       ImGui::SameLine();
-      if (ImGui::Button(
-              "Clear Obstacles")) // Buttons return true when clicked (most
-                                  // widgets return true when edited/activated)
+      if (ImGui::Button("Clear Obstacles")) // Buttons return true when clicked (most
+                                            // widgets return true when edited/activated)
         editor.clearObstacles();
 
-      if (ImGui::Button(
-              "Create Graph")) // Buttons return true when clicked (most
-                               // widgets return true when edited/activated)
+      if (ImGui::Button("Create Graph")) // Buttons return true when clicked (most
+                                         // widgets return true when edited/activated)
         editor.createGraph();
 
       ImGui::Spacing();
-      ImGui::Text(
-          "Add the endpoints of the path you want to find and click Find Path");
+      ImGui::Text("Add the endpoints of the path you want to find and click Find Path");
       ImGui::Spacing();
       {
         ImGui::InputFloat2(("Start #" + std::to_string(1)).c_str(), path1start);
@@ -273,32 +262,30 @@ int main(int, char **) {
       //   editor.m_ends.push_back({0.0f, 0.0f});
       // }
 
-      if (ImGui::Button(
-              "Find Paths")) // Buttons return true when clicked (most
-                             // widgets return true when edited/activated)
+      if (ImGui::Button("Find Paths")) // Buttons return true when clicked (most
+                                       // widgets return true when edited/activated)
       {
         std::vector<std::pair<glm::vec3, glm::vec3>> endPoints;
-        endPoints.push_back({glm::vec3(path1start[0], 0, path1start[1]),
-                             glm::vec3(path1end[0], 0, path1end[1])});
-        endPoints.push_back({glm::vec3(path2start[0], 0, path2start[1]),
-                             glm::vec3(path2end[0], 0, path2end[1])});
-        endPoints.push_back({glm::vec3(path3start[0], 0, path3start[1]),
-                             glm::vec3(path3end[0], 0, path3end[1])});
+        endPoints.push_back(
+            {glm::vec3(path1start[0], 0, path1start[1]), glm::vec3(path1end[0], 0, path1end[1])});
+        endPoints.push_back(
+            {glm::vec3(path2start[0], 0, path2start[1]), glm::vec3(path2end[0], 0, path2end[1])});
+        endPoints.push_back(
+            {glm::vec3(path3start[0], 0, path3start[1]), glm::vec3(path3end[0], 0, path3end[1])});
         editor.getDisjkstraPath(endPoints);
       }
 
-      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                  1000.0f / io.Framerate, io.Framerate);
+      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate,
+                  io.Framerate);
       ImGui::End();
     }
 
     // 3. Show another simple window.
     if (show_another_window) {
-      ImGui::Begin(
-          "Another Window",
-          &show_another_window); // Pass a pointer to our bool variable (the
-                                 // window will have a closing button that will
-                                 // clear the bool when clicked)
+      ImGui::Begin("Another Window",
+                   &show_another_window); // Pass a pointer to our bool variable (the
+                                          // window will have a closing button that will
+                                          // clear the bool when clicked)
       ImGui::Text("Hello from another window!");
       if (ImGui::Button("Close Me"))
         show_another_window = false;

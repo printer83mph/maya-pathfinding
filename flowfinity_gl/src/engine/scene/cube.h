@@ -4,7 +4,8 @@
 
 #include <GL/glew.h>
 
-class Cube : public Drawable {
+class Cube : public Drawable
+{
 public:
   Cube();
   Cube(float x, float y, float z);

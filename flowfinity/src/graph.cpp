@@ -1,7 +1,8 @@
-#include <graph.h>
 #include <algorithm>
+#include <graph.h>
 
-Graph::Graph(int vertices) : vertices(vertices), adjMatrix() {
+Graph::Graph(int vertices) : vertices(vertices), adjMatrix()
+{
   for (int i = 0; i < vertices; i++) {
     adjMatrix.push_back(std::vector<float>());
     for (int j = 0; j < vertices; j++) {
@@ -10,17 +11,19 @@ Graph::Graph(int vertices) : vertices(vertices), adjMatrix() {
   }
 }
 
-void Graph::addEdge(int src, int dest, float weight) {
+void Graph::addEdge(int src, int dest, float weight)
+{
   adjMatrix.at(src).at(dest) = weight;
   adjMatrix.at(dest).at(src) = weight;
 }
 
-void Graph::removeVertices(std::vector<int> verticesToDel) {
+void Graph::removeVertices(std::vector<int> verticesToDel)
+{
   // sort the array by integer value
   std::sort(verticesToDel.begin(), verticesToDel.end());
   // remove the vertices in reverse order
   for (int i = verticesToDel.size() - 1; i >= 0; i--) {
-    for (auto &row : adjMatrix) {
+    for (auto& row : adjMatrix) {
       row.erase(row.begin() + verticesToDel[i]);
     }
     adjMatrix.erase(adjMatrix.begin() + verticesToDel[i]);
@@ -28,7 +31,8 @@ void Graph::removeVertices(std::vector<int> verticesToDel) {
   }
 }
 
-void Graph::addVertices(int verticesInput) {
+void Graph::addVertices(int verticesInput)
+{
   // With the total unique endpoints, add them to the map
   vertices += verticesInput;
   // Add the new rows

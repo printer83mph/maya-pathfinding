@@ -19,9 +19,9 @@
 #include <vector>
 
 FlowFinity::FlowFinity()
-    : m_config(), m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_possibleAccels(),
-      m_nextVertex(-1), m_graph(0), m_NodeToPoint(), m_PointToNode(), edges(),
-      m_waypoints() {
+    : m_config(), m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_possibleAccels(), m_nextVertex(-1),
+      m_graph(0), m_NodeToPoint(), m_PointToNode(), edges(), m_waypoints()
+{
   float angle = 0.f;
   m_possibleAccels[32] = glm::vec2(0, 0);
   for (int i = 0; i < 16; ++i) {
@@ -39,17 +39,12 @@ FlowFinity::~FlowFinity() {}
 
 int FlowFinity::size() const { return m_rvoPos.size(); }
 
-const std::vector<glm::vec2> &FlowFinity::getAgentPositions() const {
-  return m_rvoPos;
-}
-const std::vector<glm::vec2> &FlowFinity::getAgentVelocities() const {
-  return m_rvoVel;
-}
-const std::vector<glm::vec2> &FlowFinity::getAgentTargets() const {
-  return m_rvoTarget;
-}
+const std::vector<glm::vec2>& FlowFinity::getAgentPositions() const { return m_rvoPos; }
+const std::vector<glm::vec2>& FlowFinity::getAgentVelocities() const { return m_rvoVel; }
+const std::vector<glm::vec2>& FlowFinity::getAgentTargets() const { return m_rvoTarget; }
 
-void FlowFinity::performTimeStep(float dt) {
+void FlowFinity::performTimeStep(float dt)
+{
   for (int i = 0; i < m_rvoPos.size(); ++i) {
     auto accel = findOptimalAcceleration(i, dt);
 
@@ -75,13 +70,15 @@ void FlowFinity::performTimeStep(float dt) {
   }
 }
 
-void FlowFinity::addAgent(const glm::vec2 &pos, const glm::vec2 &target) {
+void FlowFinity::addAgent(const glm::vec2& pos, const glm::vec2& target)
+{
   m_rvoPos.push_back(pos);
   m_rvoVel.push_back(glm::vec2(0, 0));
   m_rvoTarget.push_back(target);
 }
 
-void FlowFinity::removeAgent(int index) {
+void FlowFinity::removeAgent(int index)
+{
   if (index >= m_rvoPos.size()) {
     throw "index out of bounds lol";
   }
@@ -90,17 +87,19 @@ void FlowFinity::removeAgent(int index) {
   m_rvoTarget.erase(std::next(m_rvoTarget.begin(), index));
 }
 
-void FlowFinity::setAgentTarget(int index, const glm::vec2 &target) {
+void FlowFinity::setAgentTarget(int index, const glm::vec2& target)
+{
   if (index >= m_rvoPos.size()) {
     throw "index out of bounds lol";
   }
   m_rvoTarget[index] = target;
 }
 
-glm::vec2 FlowFinity::findOptimalAcceleration(int index, float dt) const {
-  auto &posA = m_rvoPos[index];
-  auto &velA = m_rvoVel[index];
-  auto &targetA = m_rvoTarget[index];
+glm::vec2 FlowFinity::findOptimalAcceleration(int index, float dt) const
+{
+  auto& posA = m_rvoPos[index];
+  auto& velA = m_rvoVel[index];
+  auto& targetA = m_rvoTarget[index];
 
   glm::vec2 idealAccel = (targetA - posA) * m_config.acceleration;
   {
@@ -109,26 +108,25 @@ glm::vec2 FlowFinity::findOptimalAcceleration(int index, float dt) const {
       idealAccel *= m_config.acceleration / accelLength;
     }
   }
-  const glm::vec2 *bestAcceleration = &idealAccel;
+  const glm::vec2* bestAcceleration = &idealAccel;
   float bestPenalty = std::numeric_limits<float>::max();
 
   for (int i = 0; i < m_rvoPos.size(); ++i) {
     if (i == index)
       continue;
 
-    auto &posB = m_rvoPos[i];
-    auto &velB = m_rvoVel[i];
-    auto &targetB = m_rvoTarget[i];
+    auto& posB = m_rvoPos[i];
+    auto& velB = m_rvoVel[i];
+    auto& targetB = m_rvoTarget[i];
 
-    VelocityObstacle vo = VelocityObstacle(posA, velA, posB, velB,
-                                           m_config.radius, m_config.radius);
+    VelocityObstacle vo =
+        VelocityObstacle(posA, velA, posB, velB, m_config.radius, m_config.radius);
 
-    for (auto &proposedAccel : m_possibleAccels) {
+    for (auto& proposedAccel : m_possibleAccels) {
       float penalty = glm::length(idealAccel * dt - proposedAccel * dt);
       if (vo.isInRVO(velA + proposedAccel * dt)) {
         // TODO: correct time to collision calculation using evil minowski sum
-        float timeToCollision =
-            glm::length((posB - posA) / (2.f * proposedAccel - velA - velB));
+        float timeToCollision = glm::length((posB - posA) / (2.f * proposedAccel - velA - velB));
         penalty += m_config.aggressiveness / timeToCollision;
       }
       if (penalty < bestPenalty) {
@@ -141,21 +139,18 @@ glm::vec2 FlowFinity::findOptimalAcceleration(int index, float dt) const {
   return *bestAcceleration;
 }
 
-const std::vector<std::pair<glm::vec2, glm::vec2>> &
-FlowFinity::getEdges() const {
-  return edges;
-}
+const std::vector<std::pair<glm::vec2, glm::vec2>>& FlowFinity::getEdges() const { return edges; }
 
-void FlowFinity::clearEndPoints() {
+void FlowFinity::clearEndPoints()
+{
   for (int waypoint : m_waypoints) {
-    edges.erase(std::remove_if(
-                    edges.begin(), edges.end(),
-                    [this, waypoint](auto &e) {
-                      return e.first == glm::vec2(m_PointToNode[waypoint].x,
-                                                  m_PointToNode[waypoint].z) ||
-                             e.second == glm::vec2(m_PointToNode[waypoint].x,
-                                                   m_PointToNode[waypoint].z);
-                    }),
+    edges.erase(std::remove_if(edges.begin(), edges.end(),
+                               [this, waypoint](auto& e) {
+                                 return e.first == glm::vec2(m_PointToNode[waypoint].x,
+                                                             m_PointToNode[waypoint].z) ||
+                                        e.second == glm::vec2(m_PointToNode[waypoint].x,
+                                                              m_PointToNode[waypoint].z);
+                               }),
                 edges.end());
     m_NodeToPoint.erase(m_PointToNode[waypoint]);
     m_PointToNode.erase(waypoint);
@@ -167,13 +162,13 @@ void FlowFinity::clearEndPoints() {
 }
 
 // Add endpoints to the graph and create edges between them and the obstacles
-void FlowFinity::addEndPoints(
-    const std::vector<std::pair<glm::vec3, glm::vec3>> &endPoints,
-    const std::vector<Obstacle> &obstacles) {
+void FlowFinity::addEndPoints(const std::vector<std::pair<glm::vec3, glm::vec3>>& endPoints,
+                              const std::vector<Obstacle>& obstacles)
+{
   int totalNodes = 0;
 
   // For each pair of endpoints
-  for (auto &pair : endPoints) {
+  for (auto& pair : endPoints) {
     glm::vec3 start = pair.first;
     glm::vec3 end = pair.second;
 
@@ -194,44 +189,41 @@ void FlowFinity::addEndPoints(
     }
 
     // Add endpoint pair to endPoints list
-    m_endPoints.push_back(
-        std::pair<int, int>(m_NodeToPoint[start], m_NodeToPoint[end]));
+    m_endPoints.push_back(std::pair<int, int>(m_NodeToPoint[start], m_NodeToPoint[end]));
 
     m_graph.addVertices(2);
 
     // Create an edge between the two endpoints if they are visible
     if (Obstacle::isVisibleExternal(start, end, obstacles)) {
-      m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[end],
-                      glm::distance(start, end));
-      edges.push_back(std::pair<glm::vec2, glm::vec2>(
-          glm::vec2(start.x, start.z), glm::vec2(end.x, end.z)));
+      m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[end], glm::distance(start, end));
+      edges.push_back(
+          std::pair<glm::vec2, glm::vec2>(glm::vec2(start.x, start.z), glm::vec2(end.x, end.z)));
     }
 
     // For each obstacle, check if the edge between the start and end point to
     // each obstacle point is visible, if so create an edge
-    for (auto &obstacle : obstacles) {
+    for (auto& obstacle : obstacles) {
       // TODO: Optimize
-      for (auto &edge : obstacle.getBounds()) {
+      for (auto& edge : obstacle.getBounds()) {
         if (obstacle.isVisible(start, edge.point1, obstacles)) {
           m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[edge.point1],
                           glm::distance(start, edge.point1));
-          edges.push_back(std::pair<glm::vec2, glm::vec2>(
-              glm::vec2(start.x, start.z),
-              glm::vec2(edge.point1.x, edge.point1.z)));
+          edges.push_back(std::pair<glm::vec2, glm::vec2>(glm::vec2(start.x, start.z),
+                                                          glm::vec2(edge.point1.x, edge.point1.z)));
         }
         if (obstacle.isVisible(end, edge.point1, obstacles)) {
           m_graph.addEdge(m_NodeToPoint[end], m_NodeToPoint[edge.point1],
                           glm::distance(end, edge.point1));
-          edges.push_back(std::pair<glm::vec2, glm::vec2>(
-              glm::vec2(end.x, end.z),
-              glm::vec2(edge.point1.x, edge.point1.z)));
+          edges.push_back(std::pair<glm::vec2, glm::vec2>(glm::vec2(end.x, end.z),
+                                                          glm::vec2(edge.point1.x, edge.point1.z)));
         }
       }
     }
   }
 }
 
-void FlowFinity::addPoint(const glm::vec3 &point) {
+void FlowFinity::addPoint(const glm::vec3& point)
+{
   if (m_NodeToPoint.find(point) == m_NodeToPoint.end()) {
     m_nextVertex++;
     m_NodeToPoint[point] = m_nextVertex;
@@ -240,7 +232,8 @@ void FlowFinity::addPoint(const glm::vec3 &point) {
 }
 
 // Just create a graph with the given obstacles
-void FlowFinity::createGraph(const std::vector<Obstacle> &obstacles) {
+void FlowFinity::createGraph(const std::vector<Obstacle>& obstacles)
+{
   // Make sure to clear the graph and maps
   m_NodeToPoint.clear();
   m_PointToNode.clear();
@@ -250,22 +243,22 @@ void FlowFinity::createGraph(const std::vector<Obstacle> &obstacles) {
   // Get total amount of vertices
   int totalNodes = 0;
   // Record total amount of waypoints
-  for (auto &obstacle : obstacles) {
+  for (auto& obstacle : obstacles) {
     totalNodes += obstacle.getBoundsCount();
   }
   m_graph = Graph(totalNodes);
 
   // For each obstacle
-  for (auto &obstacle : obstacles) {
+  for (auto& obstacle : obstacles) {
     // For each edge in the obstacle
-    for (auto &edge : obstacle.getBounds()) {
+    for (auto& edge : obstacle.getBounds()) {
       // For each other obstacle
-      for (auto &obstacle2 : obstacles) {
+      for (auto& obstacle2 : obstacles) {
         // For each edge in the other obstacle
         if (&obstacle == &obstacle2) {
           continue;
         }
-        for (auto &edge2 : obstacle2.getBounds()) {
+        for (auto& edge2 : obstacle2.getBounds()) {
           // If the two edges are visible to each other, add an edge to the map
           if (obstacle.isVisible(edge2.point1, edge.point1, obstacles)) {
             // If either of the points are not in the map, add them
@@ -275,16 +268,14 @@ void FlowFinity::createGraph(const std::vector<Obstacle> &obstacles) {
             addPoint(edge2.point2);
             // Add the edge to the graph if the edges are not the same and the
             // edge doesn't already exist
-            if (m_graph.getEdge(m_NodeToPoint[edge.point1],
-                                m_NodeToPoint[edge2.point1]) == 0 &&
+            if (m_graph.getEdge(m_NodeToPoint[edge.point1], m_NodeToPoint[edge2.point1]) == 0 &&
                 edge.point1 != edge2.point1) {
-              m_graph.addEdge(m_NodeToPoint[edge.point1],
-                              m_NodeToPoint[edge2.point1],
+              m_graph.addEdge(m_NodeToPoint[edge.point1], m_NodeToPoint[edge2.point1],
                               glm::distance(edge.point1, edge2.point1));
               // Add the edge to the list of edges
-              edges.push_back(std::pair<glm::vec2, glm::vec2>(
-                  glm::vec2(edge.point1.x, edge.point1.z),
-                  glm::vec2(edge2.point1.x, edge2.point1.z)));
+              edges.push_back(
+                  std::pair<glm::vec2, glm::vec2>(glm::vec2(edge.point1.x, edge.point1.z),
+                                                  glm::vec2(edge2.point1.x, edge2.point1.z)));
             }
           }
         }
@@ -293,25 +284,26 @@ void FlowFinity::createGraph(const std::vector<Obstacle> &obstacles) {
   }
 
   // Add adjacent points within the same obstacle to the graph
-  for (auto &obstacle : obstacles) {
-    for (auto &edge : obstacle.getBounds()) {
+  for (auto& obstacle : obstacles) {
+    for (auto& edge : obstacle.getBounds()) {
       // All obstacle points are guaranteed to be in the map, so just add them
       // using the maps
       m_graph.addEdge(m_NodeToPoint[edge.point1], m_NodeToPoint[edge.point2],
                       glm::distance(edge.point1, edge.point2));
-      edges.push_back(std::pair<glm::vec2, glm::vec2>(
-          glm::vec2(edge.point1.x, edge.point1.z),
-          glm::vec2(edge.point2.x, edge.point2.z)));
+      edges.push_back(std::pair<glm::vec2, glm::vec2>(glm::vec2(edge.point1.x, edge.point1.z),
+                                                      glm::vec2(edge.point2.x, edge.point2.z)));
     }
   }
 }
 
-float FlowFinity::getEdgeWeight(glm::vec2 point1, glm::vec2 point2) {
+float FlowFinity::getEdgeWeight(glm::vec2 point1, glm::vec2 point2)
+{
   return m_graph.getEdge(m_NodeToPoint[glm::vec3(point1.x, 0, point1.y)],
                          m_NodeToPoint[glm::vec3(point2.x, 0, point2.y)]);
 }
 
-int minDistance(int dist[], bool sptSet[], int V) {
+int minDistance(int dist[], bool sptSet[], int V)
+{
 
   // Initialize min value
   int min = INT_MAX, min_index;
@@ -323,8 +315,9 @@ int minDistance(int dist[], bool sptSet[], int V) {
   return min_index;
 }
 
-void FlowFinity::getDisjkstraPaths(std::vector<std::vector<glm::vec3>> &paths) {
-  for (auto &pathPoint : m_endPoints) {
+void FlowFinity::getDisjkstraPaths(std::vector<std::vector<glm::vec3>>& paths)
+{
+  for (auto& pathPoint : m_endPoints) {
     std::vector<glm::vec3> path;
     int src = pathPoint.first;
     int dst = pathPoint.second;
@@ -366,11 +359,9 @@ void FlowFinity::getDisjkstraPaths(std::vector<std::vector<glm::vec3>> &paths) {
         // If the vertex is not visited and the distance is less than the
         // shortest distance
         if (!visited[j] && m_graph.getEdge(curr, j) != 0 &&
-            shortestDistances[curr] + m_graph.getEdge(curr, j) <
-                shortestDistances[j]) {
+            shortestDistances[curr] + m_graph.getEdge(curr, j) < shortestDistances[j]) {
           // Update the shortest distance
-          shortestDistances[j] =
-              shortestDistances[curr] + m_graph.getEdge(curr, j);
+          shortestDistances[j] = shortestDistances[curr] + m_graph.getEdge(curr, j);
           // Update the parent
           parents[j] = curr;
         }
@@ -406,11 +397,11 @@ void FlowFinity::getDisjkstraPaths(std::vector<std::vector<glm::vec3>> &paths) {
 
     // std::cout << src << ", " << dst << std::endl;
 
-    for (auto &i : parents) {
+    for (auto& i : parents) {
       // std::cout << i << ", " << std::endl;
     }
 
-    for (auto &i : path) {
+    for (auto& i : path) {
       std::cout << i.x << ", " << i.y << ", " << i.z << std::endl;
     }
     paths.push_back(path);

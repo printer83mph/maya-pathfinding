@@ -2,13 +2,16 @@
 
 Obstacle::Obstacle()
     : bounds(std::vector<Edge>()), boundsCount(0),
-      boundingBox(glm::vec4(INT_MAX, INT_MAX, INT_MIN, INT_MIN)) {}
+      boundingBox(glm::vec4(INT_MAX, INT_MAX, INT_MIN, INT_MIN))
+{
+}
 
-Obstacle::Obstacle(const std::vector<Edge> &boundsInput)
+Obstacle::Obstacle(const std::vector<Edge>& boundsInput)
     : bounds(boundsInput), boundsCount(boundsInput.size()),
-      boundingBox(glm::vec4(INT_MAX, INT_MAX, INT_MIN, INT_MIN)) {
+      boundingBox(glm::vec4(INT_MAX, INT_MAX, INT_MIN, INT_MIN))
+{
 
-  for (const Edge &edge : bounds) {
+  for (const Edge& edge : bounds) {
     boundingBox.x = std::min(boundingBox.x, edge.point1.x);
     boundingBox.y = std::min(boundingBox.y, edge.point1.z);
     boundingBox.z = std::max(boundingBox.z, edge.point1.x);
@@ -16,9 +19,10 @@ Obstacle::Obstacle(const std::vector<Edge> &boundsInput)
   }
 }
 
-const std::vector<Edge> &Obstacle::getBounds() const { return bounds; }
+const std::vector<Edge>& Obstacle::getBounds() const { return bounds; }
 
-void Obstacle::addBound(const Edge &bound) {
+void Obstacle::addBound(const Edge& bound)
+{
   bounds.push_back(bound);
   boundsCount++;
   boundingBox.x = std::min(boundingBox.x, bound.point1.x);
@@ -31,22 +35,20 @@ const int Obstacle::getBoundsCount() const { return boundsCount; }
 
 int cross(glm::vec2 a, glm::vec2 b) { return a.x * b.y - a.y * b.x; }
 
-int orient(glm::vec2 a, glm::vec2 b, glm::vec2 c) {
-  return cross(b - a, c - a);
-}
+int orient(glm::vec2 a, glm::vec2 b, glm::vec2 c) { return cross(b - a, c - a); }
 
 const glm::vec4 Obstacle::getBoundingBox() const { return boundingBox; }
 
-float crossProduct2D(const glm::vec3 &a, const glm::vec3 &b) {
-  return a.x * b.z - a.z * b.x;
+float crossProduct2D(const glm::vec3& a, const glm::vec3& b) { return a.x * b.z - a.z * b.x; }
+
+bool onSegment(const glm::vec3& p, const glm::vec3& q, const glm::vec3& r)
+{
+  return q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) && q.z <= std::max(p.z, r.z) &&
+         q.z >= std::min(p.z, r.z);
 }
 
-bool onSegment(const glm::vec3 &p, const glm::vec3 &q, const glm::vec3 &r) {
-  return q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) &&
-         q.z <= std::max(p.z, r.z) && q.z >= std::min(p.z, r.z);
-}
-
-bool Obstacle::intersects(const Edge edge1, const Edge edge2) {
+bool Obstacle::intersects(const Edge edge1, const Edge edge2)
+{
 
   // if the edges share any endpoints, return false
   if (edge1.point1 == edge2.point1 || edge1.point1 == edge2.point2 ||
@@ -86,8 +88,8 @@ bool Obstacle::intersects(const Edge edge1, const Edge edge2) {
   return false;
 }
 
-bool isCollinear(const glm::vec3 &endPoint1, const glm::vec3 &endPoint2,
-                 const glm::vec3 &testPoint) {
+bool isCollinear(const glm::vec3& endPoint1, const glm::vec3& endPoint2, const glm::vec3& testPoint)
+{
 
   // If the test point is either of the endpoints, then return false to prevent
   // no lines being generated
@@ -100,17 +102,17 @@ bool isCollinear(const glm::vec3 &endPoint1, const glm::vec3 &endPoint2,
   return testPoint.z == m * testPoint.x + b;
 }
 
-bool Obstacle::isVisible(const glm::vec3 &externalPoint,
-                         const glm::vec3 &obstaclePoint,
-                         const std::vector<Obstacle> &obstacleList) const {
+bool Obstacle::isVisible(const glm::vec3& externalPoint, const glm::vec3& obstaclePoint,
+                         const std::vector<Obstacle>& obstacleList) const
+{
 
   // Create bounding box from the direction (obstacles potentially in the way)
   // For each obstacle in the obstacleList, check if the bounding box of the
   // obstacle intersects with the rayBoundingBox
-  for (const Obstacle &obstacle : obstacleList) {
+  for (const Obstacle& obstacle : obstacleList) {
     // TODO: Check if ray bouding box intersects with obstacle bounding box
     // (does the obstacle lie in the way?) for optimization
-    for (const Edge &edge : obstacle.bounds) {
+    for (const Edge& edge : obstacle.bounds) {
       // Check if the ray intersects with the edge
       // If the ray intersects with the edge, the obstacle is not visible
       // Or if any of the edge points are collinear with the ray, then return
@@ -128,14 +130,14 @@ bool Obstacle::isVisible(const glm::vec3 &externalPoint,
   return true;
 }
 
-bool Obstacle::isVisibleExternal(const glm::vec3 &externalPoint,
-                                 const glm::vec3 &obstaclePoint,
-                                 const std::vector<Obstacle> &obstacleList) {
+bool Obstacle::isVisibleExternal(const glm::vec3& externalPoint, const glm::vec3& obstaclePoint,
+                                 const std::vector<Obstacle>& obstacleList)
+{
   // For each obstacle in the obstacleList
-  for (const Obstacle &obstacle : obstacleList) {
+  for (const Obstacle& obstacle : obstacleList) {
     // TODO: Check if ray bouding box intersects with obstacle bounding box
     // (does the obstacle lie in the way?) for optimization
-    for (const Edge &edge : obstacle.bounds) {
+    for (const Edge& edge : obstacle.bounds) {
       // Check if the ray intersects with the edge
       // If the ray intersects with the edge, the obstacle is not visible
       if (edge.point1 != obstaclePoint && edge.point2 != obstaclePoint) {

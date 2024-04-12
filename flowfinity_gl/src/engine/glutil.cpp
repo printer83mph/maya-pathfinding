@@ -3,11 +3,12 @@
 #include "GL/glew.h"
 #include <iostream>
 
-void GLUtil::printGLErrorLog() {
+void GLUtil::printGLErrorLog()
+{
   GLenum error = glGetError();
   if (error != GL_NO_ERROR) {
     std::cerr << "OpenGL error " << error << ": ";
-    const char *e = error == GL_INVALID_OPERATION   ? "GL_INVALID_OPERATION"
+    const char* e = error == GL_INVALID_OPERATION   ? "GL_INVALID_OPERATION"
                     : error == GL_INVALID_ENUM      ? "GL_INVALID_ENUM"
                     : error == GL_INVALID_VALUE     ? "GL_INVALID_VALUE"
                     : error == GL_INVALID_INDEX     ? "GL_INVALID_INDEX"
@@ -23,7 +24,8 @@ void GLUtil::printGLErrorLog() {
   }
 }
 
-void GLUtil::printLinkInfoLog(int prog) {
+void GLUtil::printLinkInfoLog(int prog)
+{
   GLint linked;
   glGetProgramiv(prog, GL_LINK_STATUS, &linked);
   if (linked == GL_TRUE) {
@@ -33,7 +35,7 @@ void GLUtil::printLinkInfoLog(int prog) {
 
   int infoLogLen = 0;
   int charsWritten = 0;
-  GLchar *infoLog;
+  GLchar* infoLog;
 
   glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &infoLogLen);
 
@@ -48,7 +50,8 @@ void GLUtil::printLinkInfoLog(int prog) {
   throw;
 }
 
-void GLUtil::printShaderCompileInfoLog(int shader) {
+void GLUtil::printShaderCompileInfoLog(int shader)
+{
   GLint compiled;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
   if (compiled == GL_TRUE) {
@@ -58,7 +61,7 @@ void GLUtil::printShaderCompileInfoLog(int shader) {
 
   int infoLogLen = 0;
   int charsWritten = 0;
-  GLchar *infoLog;
+  GLchar* infoLog;
 
   glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLen);
 

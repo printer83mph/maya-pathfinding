@@ -8,17 +8,20 @@
 
 PathDisplay::PathDisplay() : Drawable(), m_path() {}
 
-PathDisplay::PathDisplay(const std::vector<glm::vec3> &path)
-    : Drawable(), m_path(path), m_color(1, 1, 1) {}
+PathDisplay::PathDisplay(const std::vector<glm::vec3>& path)
+    : Drawable(), m_path(path), m_color(1, 1, 1)
+{
+}
 
 PathDisplay::~PathDisplay() {}
 
-void PathDisplay::setColor(const glm::vec3 &color) { m_color = color; }
+void PathDisplay::setColor(const glm::vec3& color) { m_color = color; }
 
-void PathDisplay::create() {
+void PathDisplay::create()
+{
   std::vector<glm::vec4> pos{}, col{};
 
-  for (auto &point : m_path) {
+  for (auto& point : m_path) {
     pos.push_back(glm::vec4(point, 1));
     col.push_back(glm::vec4(m_color, 1));
   }
@@ -33,18 +36,15 @@ void PathDisplay::create() {
 
   m_attributes.idx.generate();
   m_attributes.idx.bind();
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, idx.size() * sizeof(GLuint), idx.data(),
-               GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, idx.size() * sizeof(GLuint), idx.data(), GL_STATIC_DRAW);
 
   m_attributes.pos.generate();
   m_attributes.pos.bind();
-  glBufferData(GL_ARRAY_BUFFER, pos.size() * sizeof(glm::vec4), pos.data(),
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, pos.size() * sizeof(glm::vec4), pos.data(), GL_STATIC_DRAW);
 
   m_attributes.col.generate();
   m_attributes.col.bind();
-  glBufferData(GL_ARRAY_BUFFER, col.size() * sizeof(glm::vec4), col.data(),
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, col.size() * sizeof(glm::vec4), col.data(), GL_STATIC_DRAW);
 }
 
 GLenum PathDisplay::drawMode() { return GL_LINES; }

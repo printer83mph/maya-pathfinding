@@ -6,7 +6,8 @@
 #include <glm/mat4x4.hpp>
 #include <string>
 
-class ShaderProgram {
+class ShaderProgram
+{
   struct Handles {
     Handles();
 
@@ -37,24 +38,24 @@ public:
   GLuint m_prog;
 
   ShaderProgram();
-  void create(const char *vertFile, const char *fragFile);
+  void create(const char* vertFile, const char* fragFile);
   void useMe();
 
   // Draw the given object to our screen using this ShaderProgram's shaders
-  void draw(Drawable &drawable);
+  void draw(Drawable& drawable);
 
   // Pass model matrix to this shader on the GPU
-  void setModelMatrix(const glm::mat4 &model);
+  void setModelMatrix(const glm::mat4& model);
   // Pass Projection * View matrix to this shader on the GPU
-  void setViewProjMatrix(const glm::mat4 &vp);
+  void setViewProjMatrix(const glm::mat4& vp);
   // Pass camera position to this shader on the GPU
-  void setCamPos(const glm::vec3 &cp);
+  void setCamPos(const glm::vec3& cp);
 
 private:
   // Utility functions used by draw()
-  void bindDrawable(Drawable &drawable);
+  void bindDrawable(Drawable& drawable);
   void unbindDrawable();
 
   // Utility function used in create()
-  std::string textFileRead(const char *);
+  std::string textFileRead(const char*);
 };

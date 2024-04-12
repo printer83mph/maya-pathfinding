@@ -6,16 +6,17 @@
 #include <GL/glew.h>
 #include <vector>
 
-class PathDisplay : public Drawable {
+class PathDisplay : public Drawable
+{
 public:
   PathDisplay();
-  PathDisplay(const std::vector<glm::vec3> &path);
+  PathDisplay(const std::vector<glm::vec3>& path);
   ~PathDisplay();
 
   void create() override;
   GLenum drawMode() override;
 
-  void setColor(const glm::vec3 &color);
+  void setColor(const glm::vec3& color);
 
 private:
   std::vector<glm::vec3> m_path;

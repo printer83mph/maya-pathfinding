@@ -10,21 +10,23 @@
 namespace fs = std::filesystem;
 
 ShaderProgram::Handles::Handles()
-    : attr_pos(-1), attr_col(-1), attr_nor(-1), unif_model(-1),
-      unif_modelInvTr(-1), unif_viewProj(-1), unif_camPos(-1) {}
+    : attr_pos(-1), attr_col(-1), attr_nor(-1), unif_model(-1), unif_modelInvTr(-1),
+      unif_viewProj(-1), unif_camPos(-1)
+{
+}
 
-ShaderProgram::ShaderProgram()
-    : m_vertShader(0), m_fragShader(0), m_prog(0), m_handles() {}
+ShaderProgram::ShaderProgram() : m_vertShader(0), m_fragShader(0), m_prog(0), m_handles() {}
 
-void ShaderProgram::create(const char *vertFile, const char *fragFile) {
+void ShaderProgram::create(const char* vertFile, const char* fragFile)
+{
   // Load and compile the vertex and fragment shaders
   m_vertShader = glCreateShader(GL_VERTEX_SHADER);
   m_fragShader = glCreateShader(GL_FRAGMENT_SHADER);
 
   std::string vertSource = textFileRead(vertFile);
   std::string fragSource = textFileRead(fragFile);
-  const char *vertSourceC = vertSource.c_str();
-  const char *fragSourceC = fragSource.c_str();
+  const char* vertSourceC = vertSource.c_str();
+  const char* fragSourceC = fragSource.c_str();
 
   glShaderSource(m_vertShader, 1, &vertSourceC, 0);
   glShaderSource(m_fragShader, 1, &fragSourceC, 0);
@@ -57,13 +59,13 @@ void ShaderProgram::create(const char *vertFile, const char *fragFile) {
 
 void ShaderProgram::useMe() { glUseProgram(m_prog); }
 
-void ShaderProgram::draw(Drawable &drawable) {
+void ShaderProgram::draw(Drawable& drawable)
+{
   GLUtil::printGLErrorLog();
   if (drawable.elemCount() < 0) {
-    throw std::invalid_argument(
-        "Attempting to draw a Drawable that has not initialized its count "
-        "variable! Remember to set it to the length of your index array in "
-        "create().");
+    throw std::invalid_argument("Attempting to draw a Drawable that has not initialized its count "
+                                "variable! Remember to set it to the length of your index array in "
+                                "create().");
   }
   useMe();
 
@@ -79,33 +81,36 @@ void ShaderProgram::draw(Drawable &drawable) {
   GLUtil::printGLErrorLog();
 }
 
-void ShaderProgram::setModelMatrix(const glm::mat4 &model) {
+void ShaderProgram::setModelMatrix(const glm::mat4& model)
+{
   useMe();
   if (m_handles.unif_model != -1) {
     glUniformMatrix4fv(m_handles.unif_model, 1, GL_FALSE, &model[0][0]);
   }
   if (m_handles.unif_modelInvTr != -1) {
     glm::mat3 modelInvTr = glm::inverse(glm::transpose(glm::mat3(model)));
-    glUniformMatrix3fv(m_handles.unif_modelInvTr, 1, GL_FALSE,
-                       &modelInvTr[0][0]);
+    glUniformMatrix3fv(m_handles.unif_modelInvTr, 1, GL_FALSE, &modelInvTr[0][0]);
   }
 }
 
-void ShaderProgram::setViewProjMatrix(const glm::mat4 &viewProj) {
+void ShaderProgram::setViewProjMatrix(const glm::mat4& viewProj)
+{
   useMe();
   if (m_handles.unif_viewProj != -1) {
     glUniformMatrix4fv(m_handles.unif_viewProj, 1, GL_FALSE, &viewProj[0][0]);
   }
 }
 
-void ShaderProgram::setCamPos(const glm::vec3 &cp) {
+void ShaderProgram::setCamPos(const glm::vec3& cp)
+{
   useMe();
   if (m_handles.unif_camPos != -1) {
     glUniform3fv(m_handles.unif_camPos, 1, &cp[0]);
   }
 }
 
-void ShaderProgram::bindDrawable(Drawable &drawable) {
+void ShaderProgram::bindDrawable(Drawable& drawable)
+{
   // Each of the following blocks checks that:
   //   * This shader has this attribute, and
   //   * This Drawable has a vertex buffer for this attribute.
@@ -129,7 +134,8 @@ void ShaderProgram::bindDrawable(Drawable &drawable) {
   }
 }
 
-void ShaderProgram::unbindDrawable() {
+void ShaderProgram::unbindDrawable()
+{
   if (m_handles.attr_pos != -1)
     glDisableVertexAttribArray(m_handles.attr_pos);
   if (m_handles.attr_col != -1)
@@ -138,7 +144,8 @@ void ShaderProgram::unbindDrawable() {
     glDisableVertexAttribArray(m_handles.attr_nor);
 }
 
-std::string ShaderProgram::textFileRead(const char *filename) {
+std::string ShaderProgram::textFileRead(const char* filename)
+{
   fs::path path = fs::current_path() / "resources/glsl" / filename;
 
   std::ifstream file(path);

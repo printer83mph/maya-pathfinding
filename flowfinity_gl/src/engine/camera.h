@@ -5,13 +5,14 @@
 
 // A perspective projection camera
 // Receives its eye position and reference point from the scene XML file
-class Camera {
+class Camera
+{
 public:
   Camera();
   Camera(unsigned int w, unsigned int h);
   Camera(unsigned int w, unsigned int h, float rotY, float rotX, float distance,
-         const glm::vec3 &worldUp);
-  Camera(const Camera &c);
+         const glm::vec3& worldUp);
+  Camera(const Camera& c);
 
   float fovy;
   unsigned int width, height; // Screen dimensions

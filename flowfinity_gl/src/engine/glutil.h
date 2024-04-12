@@ -1,6 +1,7 @@
 #pragma once
 
-namespace GLUtil {
+namespace GLUtil
+{
 void printGLErrorLog();
 void printLinkInfoLog(int prog);
 void printShaderCompileInfoLog(int shader);

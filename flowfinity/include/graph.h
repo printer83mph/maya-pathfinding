@@ -3,7 +3,8 @@
 #include <vector>
 
 // Graph represented with adjacency matrix
-class Graph {
+class Graph
+{
 public:
   Graph(int vertices);
   void addEdge(int src, int dest, float weight);

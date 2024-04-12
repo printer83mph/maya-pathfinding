@@ -17,32 +17,32 @@
 /**
  * Class representing a crowd simulation instance
  */
-class FlowFinity {
+class FlowFinity
+{
 public:
   FlowFinity();
   ~FlowFinity();
 
   int size() const;
-  const std::vector<glm::vec2> &getAgentPositions() const;
-  const std::vector<glm::vec2> &getAgentVelocities() const;
-  const std::vector<glm::vec2> &getAgentTargets() const;
+  const std::vector<glm::vec2>& getAgentPositions() const;
+  const std::vector<glm::vec2>& getAgentVelocities() const;
+  const std::vector<glm::vec2>& getAgentTargets() const;
 
   void performTimeStep(float dt);
 
-  void addAgent(const glm::vec2 &pos, const glm::vec2 &target);
+  void addAgent(const glm::vec2& pos, const glm::vec2& target);
   void removeAgent(int index);
-  void setAgentTarget(int index, const glm::vec2 &target);
+  void setAgentTarget(int index, const glm::vec2& target);
 
   float getEdgeWeight(glm::vec2 point1, glm::vec2 point2);
-  void createGraph(const std::vector<Obstacle> &obstacles);
-  void
-  addEndPoints(const std::vector<std::pair<glm::vec3, glm::vec3>> &endPoints,
-               const std::vector<Obstacle> &obstacles);
-  const std::vector<std::pair<glm::vec2, glm::vec2>> &getEdges() const;
+  void createGraph(const std::vector<Obstacle>& obstacles);
+  void addEndPoints(const std::vector<std::pair<glm::vec3, glm::vec3>>& endPoints,
+                    const std::vector<Obstacle>& obstacles);
+  const std::vector<std::pair<glm::vec2, glm::vec2>>& getEdges() const;
 
   void clearEndPoints();
 
-  void getDisjkstraPaths(std::vector<std::vector<glm::vec3>> &);
+  void getDisjkstraPaths(std::vector<std::vector<glm::vec3>>&);
 
 private:
   struct Config {
@@ -70,9 +70,9 @@ private:
   std::vector<int> m_waypoints;
   std::vector<std::pair<int, int>> m_endPoints;
 
-  void addPoint(const glm::vec3 &point);
+  void addPoint(const glm::vec3& point);
 
   void addAgent(float x, float y);
-  void addAgent(const glm::vec2 &pos);
+  void addAgent(const glm::vec2& pos);
   void removeAgent(size_t index);
 };
