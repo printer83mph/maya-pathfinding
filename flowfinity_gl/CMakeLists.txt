@@ -35,7 +35,7 @@ target_include_directories(flowfinityGl PRIVATE
 target_link_libraries(flowfinityGl PRIVATE
   flowfinity
   ${OPENGL_LIBRARIES}
-  GLEW::glew
+  GLEW::GLEW
   glm::glm
   ${SDL2_LIBRARIES}
 )
