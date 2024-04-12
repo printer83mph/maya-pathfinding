@@ -39,3 +39,17 @@ target_link_libraries(flowfinityGl PRIVATE
 
 # copy resources to build dir
 add_subdirectory(resources)
+
+# copy sdl2 debug targets to output dir
+if (WIN32)
+    add_custom_command(
+        TARGET flowfinityGl POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL2::SDL2>" "$<TARGET_FILE_DIR:flowfinityGl>"
+        VERBATIM
+    )
+    add_custom_command(
+        TARGET flowfinityGl POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:GLEW::glew>" "$<TARGET_FILE_DIR:flowfinityGl>"
+        VERBATIM
+    )
+endif()

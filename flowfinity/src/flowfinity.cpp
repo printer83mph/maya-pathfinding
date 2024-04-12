@@ -12,7 +12,6 @@
 #include "glm/geometric.hpp"
 #include "glm/gtc/constants.hpp"
 #include "glm/trigonometric.hpp"
-#include <GL/glew.h>
 
 #include <iostream>
 #include <iterator>
@@ -416,26 +415,4 @@ void FlowFinity::getDisjkstraPaths(std::vector<std::vector<glm::vec3>> &paths) {
     }
     paths.push_back(path);
   }
-}
-
-void FlowFinity::drawPoints() const {
-  glBegin(GL_POINTS);
-  for (auto &pos : m_rvoPos) {
-    glVertex3f(pos.x, 0, pos.y);
-  }
-  glEnd();
-}
-
-void FlowFinity::drawVelocities() const {
-  glBegin(GL_LINES);
-  for (int i = 0; i < size(); ++i) {
-    const auto &pos = m_rvoPos[i];
-    const auto &vel = m_rvoVel[i];
-    auto end = pos + vel * 0.5f;
-    glColor3f(0, 0, 1);
-    glVertex3f(pos.x, 0, pos.y);
-    glColor3f(0, 0, 1);
-    glVertex3f(end.x, 0, end.y);
-  }
-  glEnd();
 }

@@ -1,4 +1,5 @@
 #include <graph.h>
+#include <algorithm>
 
 Graph::Graph(int vertices) : vertices(vertices), adjMatrix() {
   for (int i = 0; i < vertices; i++) {

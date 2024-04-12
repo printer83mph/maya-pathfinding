@@ -44,9 +44,6 @@ public:
 
   void getDisjkstraPaths(std::vector<std::vector<glm::vec3>> &);
 
-  void drawPoints() const;
-  void drawVelocities() const;
-
 private:
   struct Config {
     float maxSpeed = 1.f;
