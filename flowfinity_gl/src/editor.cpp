@@ -285,8 +285,31 @@ void Editor::paint() {
     }
   }
 
-  m_flowFinity.drawPoints();
-  m_flowFinity.drawVelocities();
+  // draw agents
+  {
+      auto& agentPos = m_flowFinity.getAgentPositions();
+      auto& agentVel = m_flowFinity.getAgentVelocities();
+
+      // draw positions
+      glBegin(GL_POINTS);
+      for (auto& pos : agentPos) {
+          glVertex3f(pos.x, 0, pos.y);
+      }
+      glEnd();
+
+      // draw velocities
+      glBegin(GL_LINES);
+      for (int i = 0; i < m_flowFinity.size(); ++i) {
+          const auto& pos = agentPos.at(i);
+          const auto& vel = agentVel.at(i);
+          auto end = pos + vel * 0.5f;
+          glColor3f(0, 0, 1);
+          glVertex3f(pos.x, 0, pos.y);
+          glColor3f(0, 0, 1);
+          glVertex3f(end.x, 0, end.y);
+      }
+      glEnd();
+  }
 }
 
 void Editor::processEvent(const SDL_Event &event) {

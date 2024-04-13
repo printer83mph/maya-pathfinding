@@ -26,3 +26,6 @@ imgui.ini
 !.vscode/launch.json
 !.vscode/settings.json
 !.vscode/tasks.json
+
+# vs
+.vs/

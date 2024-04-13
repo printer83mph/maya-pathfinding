@@ -1,3 +1,5 @@
+find_package(glm CONFIG REQUIRED)
+
 set(SOURCES
   "src/flowfinity.cpp"
   "src/graph.cpp"

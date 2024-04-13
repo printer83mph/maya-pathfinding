@@ -1,5 +1,7 @@
 {
-  "cmake.automaticReconfigure": false,
-  "cmake.configureOnOpen": false,
-  "cmake.configureOnEdit": false,
+  "cmake.buildDirectory": "${workspaceFolder}/build_debug",
+  "clangd.arguments": [
+    "-background-index",
+    "-compile-commands-dir=build_debug"
+  ],
 }
