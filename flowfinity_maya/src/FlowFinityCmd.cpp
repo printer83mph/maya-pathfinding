@@ -1,17 +1,20 @@
-#include "LSystemCmd.h"
+#include "FlowFinityCmd.h"
 
+#include <flowfinity.h>
 
 #include <maya/MGlobal.h>
+
 #include <list>
-LSystemCmd::LSystemCmd() : MPxCommand()
+
+FlowFinityCmd::FlowFinityCmd() : MPxCommand()
 {
 }
 
-LSystemCmd::~LSystemCmd() 
+FlowFinityCmd::~FlowFinityCmd() 
 {
 }
 
-MStatus LSystemCmd::doIt( const MArgList& args )
+MStatus FlowFinityCmd::doIt( const MArgList& args )
 {
 	// message in Maya output window
     cout<<"Implement Me!"<<endl;

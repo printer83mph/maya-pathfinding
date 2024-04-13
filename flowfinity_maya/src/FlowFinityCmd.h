@@ -1,16 +1,14 @@
-#ifndef CreateLSystemCmd_H_
-#define CreateLSystemCmd_H_
+#pragma once
 
 #include <maya/MPxCommand.h>
+
 #include <string>
 
-class LSystemCmd : public MPxCommand
+class FlowFinityCmd : public MPxCommand
 {
 public:
-    LSystemCmd();
-    virtual ~LSystemCmd();
-    static void* creator() { return new LSystemCmd(); }
+    FlowFinityCmd();
+    virtual ~FlowFinityCmd();
+    static void* creator() { return new FlowFinityCmd(); }
     MStatus doIt( const MArgList& args );
 };
-
-#endif

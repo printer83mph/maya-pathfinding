@@ -16,15 +16,15 @@
 #include <maya/MStringArray.h>
 #include <list>
 
-#include "LSystemCmd.h"
+#include "FlowFinityCmd.h"
 
 MStatus initializePlugin( MObject obj )
 {
     MStatus   status = MStatus::kSuccess;
-    MFnPlugin plugin( obj, "MyPlugin", "1.0", "Any");
+    MFnPlugin plugin( obj, "FlowFinity", "1.0", "Any");
 
     // Register Command
-    status = plugin.registerCommand( "LSystemCmd", LSystemCmd::creator );
+    status = plugin.registerCommand( "FlowFinityCmd", FlowFinityCmd::creator );
     if (!status) {
         status.perror("registerCommand");
         return status;
@@ -38,7 +38,7 @@ MStatus uninitializePlugin( MObject obj)
     MStatus   status = MStatus::kSuccess;
     MFnPlugin plugin( obj );
 
-    status = plugin.deregisterCommand( "LSystemCmd" );
+    status = plugin.deregisterCommand( "FlowFinityCmd" );
     if (!status) {
 	    status.perror("deregisterCommand");
 	    return status;
