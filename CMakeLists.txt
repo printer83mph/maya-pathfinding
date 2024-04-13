@@ -28,14 +28,11 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     endif()
 endif()
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/glm/CMakeLists.txt")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/imgui/imgui.h")
     message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
 endif()
 
-add_subdirectory(extern/glm)
-# imgui does not provide cmake support
-
-# Backend logic
+# subdirectory targets
 add_subdirectory(flowfinity)
 add_subdirectory(flowfinity_gl)
 add_subdirectory(flowfinity_maya)

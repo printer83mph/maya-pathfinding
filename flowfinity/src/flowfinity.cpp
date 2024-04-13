@@ -1,11 +1,17 @@
 #include "flowfinity.h"
+
+#include "glm/ext/vector_float3.hpp"
+#include "glm/geometric.hpp"
+
+#include "glm/fwd.hpp"
+#include "glm/gtc/constants.hpp"
+
 #include "rvo.h"
 
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
 #include "glm/gtc/constants.hpp"
 #include "glm/trigonometric.hpp"
-#include <GL/glew.h>
 
 #include <iostream>
 #include <iterator>
@@ -14,7 +20,8 @@
 
 FlowFinity::FlowFinity()
     : m_config(), m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_possibleAccels(),
-      m_nextVertex(-1), m_graph(0), m_NodeToPoint(), m_PointToNode(), edges() {
+      m_nextVertex(-1), m_graph(0), m_NodeToPoint(), m_PointToNode(), edges(),
+      m_waypoints() {
   float angle = 0.f;
   m_possibleAccels[32] = glm::vec2(0, 0);
   for (int i = 0; i < 16; ++i) {
@@ -139,11 +146,30 @@ FlowFinity::getEdges() const {
   return edges;
 }
 
+void FlowFinity::clearEndPoints() {
+  for (int waypoint : m_waypoints) {
+    edges.erase(std::remove_if(
+                    edges.begin(), edges.end(),
+                    [this, waypoint](auto &e) {
+                      return e.first == glm::vec2(m_PointToNode[waypoint].x,
+                                                  m_PointToNode[waypoint].z) ||
+                             e.second == glm::vec2(m_PointToNode[waypoint].x,
+                                                   m_PointToNode[waypoint].z);
+                    }),
+                edges.end());
+    m_NodeToPoint.erase(m_PointToNode[waypoint]);
+    m_PointToNode.erase(waypoint);
+  }
+  m_graph.removeVertices(m_waypoints);
+  m_nextVertex -= m_waypoints.size();
+  m_waypoints.clear();
+  m_endPoints.clear();
+}
+
 // Add endpoints to the graph and create edges between them and the obstacles
 void FlowFinity::addEndPoints(
     const std::vector<std::pair<glm::vec3, glm::vec3>> &endPoints,
     const std::vector<Obstacle> &obstacles) {
-  // TODO
   int totalNodes = 0;
 
   // For each pair of endpoints
@@ -157,25 +183,21 @@ void FlowFinity::addEndPoints(
       m_NodeToPoint[start] = m_nextVertex;
       m_PointToNode[m_nextVertex] = start;
       totalNodes++;
+      m_waypoints.push_back(m_nextVertex);
     }
     if (m_NodeToPoint.find(end) == m_NodeToPoint.end()) {
       m_nextVertex++;
       m_NodeToPoint[end] = m_nextVertex;
       m_PointToNode[m_nextVertex] = end;
       totalNodes++;
+      m_waypoints.push_back(m_nextVertex);
     }
 
-    // With the total unique endpoints, add them to the map
-    m_graph.vertices = m_graph.vertices + totalNodes;
-    // Add the new rows
-    for (int i = 0; i < totalNodes; i++) {
-      m_graph.adjMatrix.push_back(std::vector<float>());
-      m_graph.adjMatrix.back().resize(m_graph.vertices);
-    }
-    // Update the old rows
-    for (int i = 0; i < m_graph.vertices - totalNodes; i++) {
-      m_graph.adjMatrix[i].resize(m_graph.vertices);
-    }
+    // Add endpoint pair to endPoints list
+    m_endPoints.push_back(
+        std::pair<int, int>(m_NodeToPoint[start], m_NodeToPoint[end]));
+
+    m_graph.addVertices(2);
 
     // Create an edge between the two endpoints if they are visible
     if (Obstacle::isVisibleExternal(start, end, obstacles)) {
@@ -209,6 +231,14 @@ void FlowFinity::addEndPoints(
   }
 }
 
+void FlowFinity::addPoint(const glm::vec3 &point) {
+  if (m_NodeToPoint.find(point) == m_NodeToPoint.end()) {
+    m_nextVertex++;
+    m_NodeToPoint[point] = m_nextVertex;
+    m_PointToNode[m_nextVertex] = point;
+  }
+}
+
 // Just create a graph with the given obstacles
 void FlowFinity::createGraph(const std::vector<Obstacle> &obstacles) {
   // Make sure to clear the graph and maps
@@ -239,21 +269,10 @@ void FlowFinity::createGraph(const std::vector<Obstacle> &obstacles) {
           // If the two edges are visible to each other, add an edge to the map
           if (obstacle.isVisible(edge2.point1, edge.point1, obstacles)) {
             // If either of the points are not in the map, add them
-            bool point1Exists =
-                m_NodeToPoint.find(edge.point1) != m_NodeToPoint.end();
-            bool point2Exists =
-                m_NodeToPoint.find(edge2.point1) != m_NodeToPoint.end();
-
-            if (!point1Exists) {
-              m_nextVertex++;
-              m_NodeToPoint[edge.point1] = m_nextVertex;
-              m_PointToNode[m_nextVertex] = edge.point1;
-            }
-            if (!point2Exists) {
-              m_nextVertex++;
-              m_NodeToPoint[edge2.point1] = m_nextVertex;
-              m_PointToNode[m_nextVertex] = edge2.point1;
-            }
+            addPoint(edge.point1);
+            addPoint(edge2.point1);
+            addPoint(edge.point2);
+            addPoint(edge2.point2);
             // Add the edge to the graph if the edges are not the same and the
             // edge doesn't already exist
             if (m_graph.getEdge(m_NodeToPoint[edge.point1],
@@ -304,146 +323,96 @@ int minDistance(int dist[], bool sptSet[], int V) {
   return min_index;
 }
 
-std::vector<glm::vec3> FlowFinity::getDisjkstraPath(glm::vec3 start,
-                                                    glm::vec3 end) {
-  std::vector<glm::vec3> path;
-  int src, dst;
-  // Try to find the start and end points in the map, otherwise, go through map
-  // to find the closest point
-  if (m_NodeToPoint.find(start) != m_NodeToPoint.end()) {
-    src = m_NodeToPoint[start];
-  } else {
-    float minDist = INT_MAX;
-    for (auto &point : m_NodeToPoint) {
-      float dist = glm::distance(glm::vec2(start.x, start.z),
-                                 glm::vec2(point.first.x, point.first.z));
-      if (dist < minDist) {
-        minDist = dist;
-        src = point.second;
+void FlowFinity::getDisjkstraPaths(std::vector<std::vector<glm::vec3>> &paths) {
+  for (auto &pathPoint : m_endPoints) {
+    std::vector<glm::vec3> path;
+    int src = pathPoint.first;
+    int dst = pathPoint.second;
+
+    int nVertices = m_graph.getVertices();
+
+    // shortestDistances[i] will hold the shortest distance from src to i
+    std::vector<float> shortestDistances(nVertices);
+
+    // visited[i] will be true if the vertex has been visited by the algorithm
+    std::vector<bool> visited(nVertices);
+
+    // Initialize all distances as
+    // INFINITE and added[] as false
+    for (int vertexIndex = 0; vertexIndex < nVertices; vertexIndex++) {
+      shortestDistances[vertexIndex] = INT_MAX;
+      visited[vertexIndex] = false;
+    }
+
+    // Distance of source vertex from
+    // itself is always 0
+    shortestDistances[src] = 0;
+
+    // Parent array to store shortest
+    // path tree
+    std::vector<int> parents(nVertices);
+
+    // The starting vertex does not have a parent
+    parents[src] = -1;
+
+    // The source has been visited
+    visited[src] = true;
+
+    // Starting from source, go through each vertex
+    int curr = src;
+    for (int i = 1; i < nVertices; i++) {
+      // For each vertex, go through all the edges
+      for (int j = 0; j < nVertices; j++) {
+        // If the vertex is not visited and the distance is less than the
+        // shortest distance
+        if (!visited[j] && m_graph.getEdge(curr, j) != 0 &&
+            shortestDistances[curr] + m_graph.getEdge(curr, j) <
+                shortestDistances[j]) {
+          // Update the shortest distance
+          shortestDistances[j] =
+              shortestDistances[curr] + m_graph.getEdge(curr, j);
+          // Update the parent
+          parents[j] = curr;
+        }
       }
-    }
-  }
 
-  if (m_NodeToPoint.find(end) != m_NodeToPoint.end()) {
-    dst = m_NodeToPoint[end];
-  } else {
-    float minDist = INT_MAX;
-    for (auto &point : m_NodeToPoint) {
-      float dist = glm::distance(glm::vec2(end.x, end.z),
-                                 glm::vec2(point.first.x, point.first.z));
-      if (dist < minDist) {
-        minDist = dist;
-        dst = point.second;
+      // Find the vertex with the smallest distance
+      int nextVertex = -1;
+      float minDistance = INT_MAX;
+      for (int j = 0; j < nVertices; j++) {
+        if (!visited[j] && shortestDistances[j] < minDistance) {
+          nextVertex = j;
+          minDistance = shortestDistances[j];
+        }
       }
-    }
-  }
 
-  int nVertices = m_graph.getVertices();
-
-  // shortestDistances[i] will hold the shortest distance from src to i
-  std::vector<float> shortestDistances(nVertices);
-
-  // visited[i] will be true if the vertex has been visited by the algorithm
-  std::vector<bool> visited(nVertices);
-
-  // Initialize all distances as
-  // INFINITE and added[] as false
-  for (int vertexIndex = 0; vertexIndex < nVertices; vertexIndex++) {
-    shortestDistances[vertexIndex] = INT_MAX;
-    visited[vertexIndex] = false;
-  }
-
-  // Distance of source vertex from
-  // itself is always 0
-  shortestDistances[src] = 0;
-
-  // Parent array to store shortest
-  // path tree
-  std::vector<int> parents(nVertices);
-
-  // The starting vertex does not have a parent
-  parents[src] = -1;
-
-  // The source has been visited
-  visited[src] = true;
-
-  // Starting from source, go through each vertex
-  int curr = src;
-  for (int i = 1; i < nVertices; i++) {
-    // For each vertex, go through all the edges
-    for (int j = 0; j < nVertices; j++) {
-      // If the vertex is not visited and the distance is less than the
-      // shortest distance
-      if (!visited[j] && m_graph.getEdge(curr, j) != 0 &&
-          shortestDistances[curr] + m_graph.getEdge(curr, j) <
-              shortestDistances[j]) {
-        // Update the shortest distance
-        shortestDistances[j] =
-            shortestDistances[curr] + m_graph.getEdge(curr, j);
-        // Update the parent
-        parents[j] = curr;
+      // If there is no next vertex, break
+      if (nextVertex == -1) {
+        break;
       }
+
+      // Mark the vertex as visited
+      visited[nextVertex] = true;
+      curr = nextVertex;
     }
 
-    // Find the vertex with the smallest distance
-    int nextVertex = -1;
-    float minDistance = INT_MAX;
-    for (int j = 0; j < nVertices; j++) {
-      if (!visited[j] && shortestDistances[j] < minDistance) {
-        nextVertex = j;
-        minDistance = shortestDistances[j];
-      }
+    int i = dst;
+    while (i != -1) {
+      path.push_back(m_PointToNode[i]);
+      i = parents[i];
     }
 
-    // If there is no next vertex, break
-    if (nextVertex == -1) {
-      break;
+    std::reverse(path.begin(), path.end());
+
+    // std::cout << src << ", " << dst << std::endl;
+
+    for (auto &i : parents) {
+      // std::cout << i << ", " << std::endl;
     }
 
-    // Mark the vertex as visited
-    visited[nextVertex] = true;
-    curr = nextVertex;
+    for (auto &i : path) {
+      std::cout << i.x << ", " << i.y << ", " << i.z << std::endl;
+    }
+    paths.push_back(path);
   }
-
-  int i = dst;
-  while (i != -1) {
-    path.push_back(m_PointToNode[i]);
-    i = parents[i];
-  }
-
-  std::reverse(path.begin(), path.end());
-
-  // std::cout << src << ", " << dst << std::endl;
-
-  for (auto &i : parents) {
-    // std::cout << i << ", " << std::endl;
-  }
-
-  for (auto &i : path) {
-    std::cout << i.x << ", " << i.y << ", " << i.z << std::endl;
-  }
-
-  return path;
-}
-
-void FlowFinity::drawPoints() const {
-  glBegin(GL_POINTS);
-  for (auto &pos : m_rvoPos) {
-    glVertex3f(pos.x, 0, pos.y);
-  }
-  glEnd();
-}
-
-void FlowFinity::drawVelocities() const {
-  glBegin(GL_LINES);
-  for (int i = 0; i < size(); ++i) {
-    const auto &pos = m_rvoPos[i];
-    const auto &vel = m_rvoVel[i];
-    auto end = pos + vel * 0.5f;
-    glColor3f(0, 0, 1);
-    glVertex3f(pos.x, 0, pos.y);
-    glColor3f(0, 0, 1);
-    glVertex3f(end.x, 0, end.y);
-  }
-  glEnd();
 }

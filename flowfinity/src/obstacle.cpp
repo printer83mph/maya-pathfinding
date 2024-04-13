@@ -139,7 +139,8 @@ bool Obstacle::isVisibleExternal(const glm::vec3 &externalPoint,
       // Check if the ray intersects with the edge
       // If the ray intersects with the edge, the obstacle is not visible
       if (edge.point1 != obstaclePoint && edge.point2 != obstaclePoint) {
-        if (intersects(Edge{externalPoint, obstaclePoint}, edge)) {
+        if (intersects(Edge{externalPoint, obstaclePoint}, edge) ||
+            isCollinear(externalPoint, obstaclePoint, edge.point1)) {
           return false;
         }
       }

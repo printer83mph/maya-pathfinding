@@ -15,6 +15,9 @@ public:
   void create() override;
   GLenum drawMode() override;
 
+  void setColor(const glm::vec3 &color);
+
 private:
   std::vector<glm::vec3> m_path;
+  glm::vec3 m_color;
 };

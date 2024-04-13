@@ -23,7 +23,7 @@
 Editor::Editor()
     : m_square(), m_cube(), m_prog_flat(), m_prog_lambert(), m_obstacles(),
       m_pathDisplay(), m_flowFinity(), m_cubeTransforms(), m_camera(),
-      m_drawPath(false) {}
+      m_drawPath(false), m_graphCreated(false) {}
 
 Editor::~Editor() {
   glDeleteVertexArrays(1, &vao);
@@ -75,6 +75,12 @@ void Editor::addCubeObstacle(glm::vec2 translation, glm::vec2 scale,
   m_obstacles.push_back(obstacle);
 }
 
+void Editor::clearObstacles() {
+  m_obstacles.clear();
+  m_graphCreated = false;
+  m_cubeTransforms.clear();
+}
+
 void Editor::addActors(int numAgents) {
   // initialize some debug flowFinity agents
   float angle = 0.f;
@@ -86,15 +92,36 @@ void Editor::addActors(int numAgents) {
   }
 }
 
-void Editor::createGraph() { m_flowFinity.createGraph(m_obstacles); }
+void Editor::createGraph() {
+  m_flowFinity.clearEndPoints();
+  m_paths.clear();
+  m_pathDisplay.clear();
+  m_flowFinity.createGraph(m_obstacles);
+  m_graphCreated = true;
+}
 
-void Editor::getDisjkstraPath(glm::vec3 start, glm::vec3 end) {
-  std::vector<std::pair<glm::vec3, glm::vec3>> endpoints;
-  endpoints.push_back(std::make_pair(start, end));
+void Editor::getDisjkstraPath(
+    std::vector<std::pair<glm::vec3, glm::vec3>> endpoints) {
+  if (!m_graphCreated) {
+    createGraph();
+  }
+  if (m_drawPath) {
+    m_flowFinity.clearEndPoints();
+    m_paths.clear();
+    m_pathDisplay.clear();
+  }
+
   m_flowFinity.addEndPoints(endpoints, m_obstacles);
-  m_path = m_flowFinity.getDisjkstraPath(start, end);
-  m_pathDisplay = PathDisplay(m_path);
-  m_pathDisplay.create();
+  m_flowFinity.getDisjkstraPaths(m_paths);
+  std::vector<glm::vec3> colors = {glm::vec3(1, 1, 1), glm::vec3(0, 1, 0),
+                                   glm::vec3(0, 0, 1)};
+  int i = 0;
+  for (auto &path : m_paths) {
+    m_pathDisplay.push_back(PathDisplay(path));
+    m_pathDisplay.back().setColor(colors[i]);
+    m_pathDisplay.back().create();
+    i++;
+  }
   m_drawPath = true;
 }
 
@@ -155,10 +182,13 @@ void Editor::update(float dt) {
   m_flowFinity.performTimeStep(dt);
 
   // spawn agents
-  if (m_flowFinity.size() < 5 && m_path.size() > 1) {
-    if ((float)std::rand() / (float)RAND_MAX < dt * 0.5f) {
-      m_flowFinity.addAgent(glm::vec2(m_path.front().x, m_path.front().z),
-                            glm::vec2(m_path.at(1).x, m_path.at(1).z));
+  if (m_paths.size() > 0) {
+    if (m_flowFinity.size() < 5 && m_paths[0].size() > 1) {
+      if ((float)std::rand() / (float)RAND_MAX < dt * 0.5f) {
+        m_flowFinity.addAgent(
+            glm::vec2(m_paths[0].front().x, m_paths[0].front().z),
+            glm::vec2(m_paths[0].at(1).x, m_paths[0].at(1).z));
+      }
     }
   }
 
@@ -170,17 +200,17 @@ void Editor::update(float dt) {
     auto target = agentTargets[i];
 
     if (glm::distance(pos, target) < 0.15f) {
-      auto &end = m_path.back();
+      auto &end = m_paths[0].back();
       if (glm::distance(target, glm::vec2(end.x, end.z)) < 0.1f) {
         // Agent has reached its final target
         m_flowFinity.removeAgent(i);
         continue;
       } else {
         // Loop through waypoints to check if we've reached one
-        for (int j = 0; j < m_path.size() - 1; ++j) {
-          auto &waypoint = m_path.at(j);
+        for (int j = 0; j < m_paths[0].size() - 1; ++j) {
+          auto &waypoint = m_paths[0].at(j);
           if (glm::distance(pos, glm::vec2(waypoint.x, waypoint.z)) < 0.1f) {
-            auto &tgt = m_path.at(j + 1);
+            auto &tgt = m_paths[0].at(j + 1);
             m_flowFinity.setAgentTarget(i, glm::vec2(tgt.x, tgt.z));
             continue;
           }
@@ -239,19 +269,46 @@ void Editor::paint() {
   glColor4f(0, 1, 0, 1);
   glEnd();
 
-  glBegin(GL_LINES);
-  for (auto &edge : m_flowFinity.getEdges()) {
-    glColor3f(0, 1, 0);
-    glVertex3f(edge.first.x, 0, edge.first.y);
-    glVertex3f(edge.second.x, 0, edge.second.y);
+  if (m_graphCreated) {
+    glBegin(GL_LINES);
+    for (auto &edge : m_flowFinity.getEdges()) {
+      glColor3f(0, 1, 0);
+      glVertex3f(edge.first.x, 0, edge.first.y);
+      glVertex3f(edge.second.x, 0, edge.second.y);
+    }
+    glEnd();
   }
-  glEnd();
-
-  m_flowFinity.drawPoints();
-  m_flowFinity.drawVelocities();
 
   if (m_drawPath) {
-    m_prog_flat.draw(m_pathDisplay);
+    for (auto &path : m_pathDisplay) {
+      m_prog_flat.draw(path);
+    }
+  }
+
+  // draw agents
+  {
+      auto& agentPos = m_flowFinity.getAgentPositions();
+      auto& agentVel = m_flowFinity.getAgentVelocities();
+
+      // draw positions
+      glBegin(GL_POINTS);
+      for (auto& pos : agentPos) {
+          glVertex3f(pos.x, 0, pos.y);
+      }
+      glEnd();
+
+      // draw velocities
+      glBegin(GL_LINES);
+      for (int i = 0; i < m_flowFinity.size(); ++i) {
+          const auto& pos = agentPos.at(i);
+          const auto& vel = agentVel.at(i);
+          auto end = pos + vel * 0.5f;
+          glColor3f(0, 0, 1);
+          glVertex3f(pos.x, 0, pos.y);
+          glColor3f(0, 0, 1);
+          glVertex3f(end.x, 0, end.y);
+      }
+      glEnd();
   }
 }
 
