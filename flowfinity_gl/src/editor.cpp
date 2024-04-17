@@ -162,7 +162,7 @@ void Editor::update(float dt)
 
   // Delete agents that arrived at their targets
   auto& agentPositions = m_flowFinity.getAgentPositions();
-  auto& agentTargets = m_flowFinity.getAgentTargets();
+  auto& agentTargets = m_flowFinity.getAgentCurrentTargets();
   for (int i = m_flowFinity.size() - 1; i >= 0; --i) {
     auto pos = agentPositions[i];
     auto target = agentTargets[i];

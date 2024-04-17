@@ -33,23 +33,14 @@ CrowdSim::~CrowdSim() {}
 
 int CrowdSim::size() const { return m_rvoPos.size(); }
 
-void CrowdSim::importAgents(const std::vector<glm::vec2>& pos, const std::vector<glm::vec2>& vel)
+void CrowdSim::importAgents(const std::vector<glm::vec2>& pos, const std::vector<glm::vec2>& vel,
+                            const std::vector<glm::vec2>& currentTarget,
+                            const std::vector<glm::vec2>& finalTarget)
 {
   m_rvoPos = pos;
   m_rvoVel = vel;
-
-  m_rvoCurrentTarget.clear();
-  m_rvoFinalTarget.clear();
-
-  for (int i = 0; i < m_rvoPos.size(); ++i) {
-    // TODO: import current/final targets for agents
-#if 1
-    m_rvoCurrentTarget.push_back(glm::vec2(0, 0));
-    m_rvoFinalTarget.push_back(glm::vec2(0, 0));
-#else
-    m_rvoCurrentTarget = ...
-#endif
-  }
+  m_rvoCurrentTarget = currentTarget;
+  m_rvoFinalTarget = finalTarget;
 }
 
 void CrowdSim::unfastComputeAllTargetsFromFirstInOutFlow(NavMethod* navMethod)
@@ -62,7 +53,11 @@ void CrowdSim::unfastComputeAllTargetsFromFirstInOutFlow(NavMethod* navMethod)
 
 const std::vector<glm::vec2>& CrowdSim::getAgentPositions() const { return m_rvoPos; }
 const std::vector<glm::vec2>& CrowdSim::getAgentVelocities() const { return m_rvoVel; }
-const std::vector<glm::vec2>& CrowdSim::getAgentTargets() const { return m_rvoCurrentTarget; }
+const std::vector<glm::vec2>& CrowdSim::getAgentCurrentTargets() const
+{
+  return m_rvoCurrentTarget;
+}
+const std::vector<glm::vec2>& CrowdSim::getAgentFinalTargets() const { return m_rvoFinalTarget; }
 
 void CrowdSim::performTimeStep(float dt)
 {
@@ -106,9 +101,9 @@ void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
 
   // loop through backwards in case we remove agents
   for (int i = size() - 1; i >= 0; --i) {
-    auto pos = m_rvoPos[i];
-    auto currentTarget = m_rvoVel[i];
-    auto finalTarget = m_rvoVel[i];
+    auto pos = m_rvoPos.at(i);
+    auto currentTarget = m_rvoCurrentTarget.at(i);
+    auto finalTarget = m_rvoFinalTarget.at(i);
 
     if (glm::distance(pos, currentTarget) < 0.05f) {
       // Check if current target is final target (we've reached the end)

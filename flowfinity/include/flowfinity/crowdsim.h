@@ -35,8 +35,10 @@ public:
   CrowdSim();
   ~CrowdSim();
 
-  // Import agents by position and velocity, clearing previous registry.
-  void importAgents(const std::vector<glm::vec2>& pos, const std::vector<glm::vec2>& vel);
+  // Import agents by position, velocity, and targets, clearing previous registry.
+  void importAgents(const std::vector<glm::vec2>& pos, const std::vector<glm::vec2>& vel,
+                    const std::vector<glm::vec2>& currentTarget,
+                    const std::vector<glm::vec2>& finalTarget);
   // awesome function that forcibly uses the first in/out flow pair and calculates current target
   // for all agents
   void unfastComputeAllTargetsFromFirstInOutFlow(NavMethod* navMethod);
@@ -44,7 +46,8 @@ public:
   int size() const;
   const std::vector<glm::vec2>& getAgentPositions() const;
   const std::vector<glm::vec2>& getAgentVelocities() const;
-  const std::vector<glm::vec2>& getAgentTargets() const;
+  const std::vector<glm::vec2>& getAgentCurrentTargets() const;
+  const std::vector<glm::vec2>& getAgentFinalTargets() const;
 
   // (DON'T USE) Runs time step without any navigation logic
   void performTimeStep(float dt);
