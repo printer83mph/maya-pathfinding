@@ -1,7 +1,6 @@
 #include "editor.h"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
-#include "obstacle.h"
 
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/geometric.hpp"
@@ -21,8 +20,9 @@
 #include <iostream>
 
 Editor::Editor()
-    : m_square(), m_cube(), m_prog_flat(), m_prog_lambert(), m_obstacles(), m_pathDisplay(),
-      m_flowFinity(), m_cubeTransforms(), m_camera(), m_drawPath(false), m_graphCreated(false)
+    : m_square(), m_cube(), m_prog_flat(), m_prog_lambert(), m_pathDisplay(), m_flowFinity(),
+      m_cubeTransforms(), m_visgraph(), m_paths(), m_camera(), m_drawPath(false),
+      m_graphCreated(false)
 {
 }
 
@@ -37,46 +37,12 @@ void Editor::addCubeObstacle(glm::vec2 translation, glm::vec2 scale, float rotat
   // Record Cube Transforms for drawing later
   m_cubeTransforms.push_back({translation, scale, rotation});
 
-  // Default cube vertices
-  std::vector<glm::vec2> pos_data{glm::vec2(-1, -1), glm::vec2(-1, 1), glm::vec2(1, 1),
-                                  glm::vec2(1, -1)};
-
-  // Set cube transformations
-  glm::mat2 scale_mat = glm::mat2(scale.x, 0, 0, scale.y);
-  glm::mat2 rot = glm::mat2(glm::cos(glm::radians(rotation)), -glm::sin(glm::radians(rotation)),
-                            glm::sin(glm::radians(rotation)), glm::cos(glm::radians(rotation)));
-
-  // Apply transformations to cube vertices
-  for (int i = 0; i < 4; i++) {
-    pos_data[i] = (rot * scale_mat * pos_data[i]) + translation;
-  }
-
-  // Create obstacle from transformed cube vertices
-  Obstacle obstacle = Obstacle();
-  obstacle.addBound(Edge{glm::vec3(pos_data[0][0], 0, pos_data[0][1]),
-                         glm::vec3(pos_data[1][0], 0, pos_data[1][1])});
-  obstacle.addBound(Edge{glm::vec3(pos_data[1][0], 0, pos_data[1][1]),
-                         glm::vec3(pos_data[2][0], 0, pos_data[2][1])});
-  obstacle.addBound(Edge{glm::vec3(pos_data[2][0], 0, pos_data[2][1]),
-                         glm::vec3(pos_data[3][0], 0, pos_data[3][1])});
-  obstacle.addBound(Edge{glm::vec3(pos_data[3][0], 0, pos_data[3][1]),
-                         glm::vec3(pos_data[0][0], 0, pos_data[0][1])});
-  // if the created obstacle is not already in the same obstacle (same bounds),
-  // then add it
-  for (auto& obstacleInList : m_obstacles) {
-    glm::vec4 boundingBox = obstacle.getBoundingBox();
-    glm::vec4 boundingBoxInList = obstacleInList.getBoundingBox();
-    if (boundingBox.x == boundingBoxInList.x && boundingBox.y == boundingBoxInList.y &&
-        boundingBox.z == boundingBoxInList.z && boundingBox.w == boundingBoxInList.w) {
-      return;
-    }
-  }
-  m_obstacles.push_back(obstacle);
+  m_visgraph.addCubeObstacle(translation, scale, rotation);
 }
 
 void Editor::clearObstacles()
 {
-  m_obstacles.clear();
+  m_visgraph.clearObstacles();
   m_graphCreated = false;
   m_cubeTransforms.clear();
 }
@@ -95,10 +61,10 @@ void Editor::addActors(int numAgents)
 
 void Editor::createGraph()
 {
-  m_flowFinity.clearEndPoints();
+  m_visgraph.clearEndPoints();
   m_paths.clear();
   m_pathDisplay.clear();
-  m_flowFinity.createGraph(m_obstacles);
+  m_visgraph.createGraph(m_visgraph.m_obstacles);
   m_graphCreated = true;
 }
 
@@ -108,13 +74,13 @@ void Editor::getDisjkstraPath(std::vector<std::pair<glm::vec3, glm::vec3>> endpo
     createGraph();
   }
   if (m_drawPath) {
-    m_flowFinity.clearEndPoints();
+    m_visgraph.clearEndPoints();
     m_paths.clear();
     m_pathDisplay.clear();
   }
 
-  m_flowFinity.addEndPoints(endpoints, m_obstacles);
-  m_flowFinity.getDisjkstraPaths(m_paths);
+  m_visgraph.addEndPoints(endpoints, m_visgraph.m_obstacles);
+  m_visgraph.getDisjkstraPaths(m_paths);
   std::vector<glm::vec3> colors = {glm::vec3(1, 1, 1), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)};
   int i = 0;
   for (auto& path : m_paths) {
@@ -196,7 +162,7 @@ void Editor::update(float dt)
 
   // Delete agents that arrived at their targets
   auto& agentPositions = m_flowFinity.getAgentPositions();
-  auto& agentTargets = m_flowFinity.getAgentTargets();
+  auto& agentTargets = m_flowFinity.getAgentCurrentTargets();
   for (int i = m_flowFinity.size() - 1; i >= 0; --i) {
     auto pos = agentPositions[i];
     auto target = agentTargets[i];
@@ -213,7 +179,7 @@ void Editor::update(float dt)
           auto& waypoint = m_paths[0].at(j);
           if (glm::distance(pos, glm::vec2(waypoint.x, waypoint.z)) < 0.1f) {
             auto& tgt = m_paths[0].at(j + 1);
-            m_flowFinity.setAgentTarget(i, glm::vec2(tgt.x, tgt.z));
+            m_flowFinity.setAgentCurrentTarget(i, glm::vec2(tgt.x, tgt.z));
             continue;
           }
         }
@@ -261,7 +227,7 @@ void Editor::paint()
   glDisable(GL_LIGHTING);
   glColor4f(0, 1, 0, 1);
   glBegin(GL_POINTS);
-  for (auto& obstacle : m_obstacles) {
+  for (auto& obstacle : m_visgraph.m_obstacles) {
     for (auto& bound : obstacle.getBounds()) {
       glVertex3f(bound.point2.x, 0, bound.point2.z);
     }
@@ -271,7 +237,7 @@ void Editor::paint()
 
   if (m_graphCreated) {
     glBegin(GL_LINES);
-    for (auto& edge : m_flowFinity.getEdges()) {
+    for (auto& edge : m_visgraph.getEdges()) {
       glColor3f(0, 1, 0);
       glVertex3f(edge.first.x, 0, edge.first.y);
       glVertex3f(edge.second.x, 0, edge.second.y);

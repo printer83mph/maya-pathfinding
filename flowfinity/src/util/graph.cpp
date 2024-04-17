@@ -1,5 +1,6 @@
+#include "flowfinity/util/graph.h"
+
 #include <algorithm>
-#include <graph.h>
 
 Graph::Graph(int vertices) : vertices(vertices), adjMatrix()
 {

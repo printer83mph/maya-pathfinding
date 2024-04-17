@@ -1,6 +1,7 @@
 #include "FlowFinityCmd.h"
 #include "FlowFinityNode.h"
-#include <flowfinity.h>
+
+#include <flowfinity/crowdsim.h>
 
 #include <maya/MGlobal.h>
 #include <maya/MSelectionList.h>

@@ -1,4 +1,4 @@
-#include <obstacle.h>
+#include "flowfinity/navigation/obstacle.h"
 
 Obstacle::Obstacle()
     : bounds(std::vector<Edge>()), boundsCount(0),

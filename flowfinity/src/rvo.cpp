@@ -1,4 +1,4 @@
-#include "rvo.h"
+#include "flowfinity/rvo.h"
 
 #include "glm/geometric.hpp"
 #include "glm/trigonometric.hpp"
