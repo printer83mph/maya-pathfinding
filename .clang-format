@@ -4,6 +4,7 @@ ColumnLimit: 100
 
 IndentWidth: 2
 UseTab: Never
+InsertNewlineAtEOF: True
 
 BreakBeforeBraces: Linux
 
