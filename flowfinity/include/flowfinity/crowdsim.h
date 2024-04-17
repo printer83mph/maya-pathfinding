@@ -16,6 +16,22 @@
 class CrowdSim
 {
 public:
+  struct Config {
+    // per-agent config
+    float maxSpeed = 1.f;
+    float acceleration = 20.f;
+    float drag = 12.f;
+    float radius = 0.25f;
+    float aggressiveness = 25.f;
+
+    // spawn/despawn logic
+    float spawnRate = .5f;
+    int maxAgents = 100;
+
+    // Position pairs representing inflow and outflow for agents.
+    std::vector<std::pair<glm::vec2, glm::vec2>> inOutFlows;
+  } m_config;
+
   CrowdSim();
   ~CrowdSim();
 
@@ -35,22 +51,6 @@ public:
   void setAgentFinalTarget(int index, const glm::vec2& target);
 
 private:
-  struct Config {
-    // per-agent config
-    float maxSpeed = 1.f;
-    float acceleration = 20.f;
-    float drag = 12.f;
-    float radius = 0.25f;
-    float aggressiveness = 25.f;
-
-    // spawn/despawn logic
-    float spawnRate = .5f;
-    int maxAgents = 100;
-
-    // Position pairs representing inflow and outflow for agents.
-    std::vector<std::pair<glm::vec2, glm::vec2>> inOutFlows;
-  } m_config;
-
   std::vector<glm::vec2> m_rvoPos;
   std::vector<glm::vec2> m_rvoVel;
   std::vector<glm::vec2> m_rvoCurrentTarget;
