@@ -6,6 +6,8 @@ VisibilityGraph::VisibilityGraph()
 {
 }
 
+VisibilityGraph::~VisibilityGraph() {}
+
 std::vector<glm::vec2> VisibilityGraph::getPath(const glm::vec2& start, const glm::vec2& end)
 {
   // get path

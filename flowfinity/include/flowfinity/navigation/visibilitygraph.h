@@ -16,6 +16,7 @@ class VisibilityGraph : public NavMethod
 {
 public:
   VisibilityGraph();
+  virtual ~VisibilityGraph();
 
   // for NavMethod
   std::vector<glm::vec2> getPath(const glm::vec2& start, const glm::vec2& end) override;

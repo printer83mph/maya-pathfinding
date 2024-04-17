@@ -1,18 +1,20 @@
 find_package(glm CONFIG REQUIRED)
 
 set(SOURCES
-  src/navigation/obstacle.cpp
+  src/navigation/navmethod.cpp
   src/navigation/visibilitygraph.cpp
+  src/navigation/obstacle.cpp
   src/util/graph.cpp
   src/crowdsim.cpp
   src/rvo.cpp
 )
 
 set(HEADERS
-  include/flowfinity/crowdsim.h
+  include/flowfinity/navigation/navmethod.h
   include/flowfinity/navigation/visibilitygraph.h
   include/flowfinity/navigation/obstacle.h
   include/flowfinity/util/graph.h
+  include/flowfinity/crowdsim.h
   include/flowfinity/rvo.h
 )
 
