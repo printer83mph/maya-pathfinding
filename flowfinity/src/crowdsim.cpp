@@ -33,6 +33,33 @@ CrowdSim::~CrowdSim() {}
 
 int CrowdSim::size() const { return m_rvoPos.size(); }
 
+void CrowdSim::importAgents(const std::vector<glm::vec2>& pos, const std::vector<glm::vec2>& vel)
+{
+  m_rvoPos = pos;
+  m_rvoVel = vel;
+
+  m_rvoCurrentTarget.clear();
+  m_rvoFinalTarget.clear();
+
+  for (int i = 0; i < m_rvoPos.size(); ++i) {
+    // TODO: import current/final targets for agents
+#if 1
+    m_rvoCurrentTarget.push_back(glm::vec2(0, 0));
+    m_rvoFinalTarget.push_back(glm::vec2(0, 0));
+#else
+    m_rvoCurrentTarget = ...
+#endif
+  }
+}
+
+void CrowdSim::unfastComputeAllTargetsFromFirstInOutFlow(NavMethod* navMethod)
+{
+  for (int i = size() - 1; i >= 0; --i) {
+    m_rvoFinalTarget[i] = m_config.inOutFlows.at(0).second;
+    computeCurrentTarget(i, navMethod);
+  }
+}
+
 const std::vector<glm::vec2>& CrowdSim::getAgentPositions() const { return m_rvoPos; }
 const std::vector<glm::vec2>& CrowdSim::getAgentVelocities() const { return m_rvoVel; }
 const std::vector<glm::vec2>& CrowdSim::getAgentTargets() const { return m_rvoCurrentTarget; }

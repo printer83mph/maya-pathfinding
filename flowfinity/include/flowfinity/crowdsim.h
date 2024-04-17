@@ -35,6 +35,12 @@ public:
   CrowdSim();
   ~CrowdSim();
 
+  // Import agents by position and velocity, clearing previous registry.
+  void importAgents(const std::vector<glm::vec2>& pos, const std::vector<glm::vec2>& vel);
+  // awesome function that forcibly uses the first in/out flow pair and calculates current target
+  // for all agents
+  void unfastComputeAllTargetsFromFirstInOutFlow(NavMethod* navMethod);
+
   int size() const;
   const std::vector<glm::vec2>& getAgentPositions() const;
   const std::vector<glm::vec2>& getAgentVelocities() const;
