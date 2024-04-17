@@ -1,4 +1,4 @@
-#include "flowfinity/flowfinity.h"
+#include "flowfinity/crowdsim.h"
 
 #include "flowfinity/rvo.h"
 
@@ -11,7 +11,7 @@
 #include <limits>
 #include <vector>
 
-FlowFinity::FlowFinity() : m_config(), m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_possibleAccels()
+CrowdSim::CrowdSim() : m_config(), m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_possibleAccels()
 {
   float angle = 0.f;
   m_possibleAccels[32] = glm::vec2(0, 0);
@@ -26,15 +26,15 @@ FlowFinity::FlowFinity() : m_config(), m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_
   }
 }
 
-FlowFinity::~FlowFinity() {}
+CrowdSim::~CrowdSim() {}
 
-int FlowFinity::size() const { return m_rvoPos.size(); }
+int CrowdSim::size() const { return m_rvoPos.size(); }
 
-const std::vector<glm::vec2>& FlowFinity::getAgentPositions() const { return m_rvoPos; }
-const std::vector<glm::vec2>& FlowFinity::getAgentVelocities() const { return m_rvoVel; }
-const std::vector<glm::vec2>& FlowFinity::getAgentTargets() const { return m_rvoTarget; }
+const std::vector<glm::vec2>& CrowdSim::getAgentPositions() const { return m_rvoPos; }
+const std::vector<glm::vec2>& CrowdSim::getAgentVelocities() const { return m_rvoVel; }
+const std::vector<glm::vec2>& CrowdSim::getAgentTargets() const { return m_rvoTarget; }
 
-void FlowFinity::performTimeStep(float dt)
+void CrowdSim::performTimeStep(float dt)
 {
   for (int i = 0; i < m_rvoPos.size(); ++i) {
     auto accel = findOptimalAcceleration(i, dt);
@@ -61,14 +61,14 @@ void FlowFinity::performTimeStep(float dt)
   }
 }
 
-void FlowFinity::addAgent(const glm::vec2& pos, const glm::vec2& target)
+void CrowdSim::addAgent(const glm::vec2& pos, const glm::vec2& target)
 {
   m_rvoPos.push_back(pos);
   m_rvoVel.push_back(glm::vec2(0, 0));
   m_rvoTarget.push_back(target);
 }
 
-void FlowFinity::removeAgent(int index)
+void CrowdSim::removeAgent(int index)
 {
   if (index >= m_rvoPos.size()) {
     throw "index out of bounds lol";
@@ -78,7 +78,7 @@ void FlowFinity::removeAgent(int index)
   m_rvoTarget.erase(std::next(m_rvoTarget.begin(), index));
 }
 
-void FlowFinity::setAgentTarget(int index, const glm::vec2& target)
+void CrowdSim::setAgentTarget(int index, const glm::vec2& target)
 {
   if (index >= m_rvoPos.size()) {
     throw "index out of bounds lol";
@@ -86,7 +86,7 @@ void FlowFinity::setAgentTarget(int index, const glm::vec2& target)
   m_rvoTarget[index] = target;
 }
 
-glm::vec2 FlowFinity::findOptimalAcceleration(int index, float dt) const
+glm::vec2 CrowdSim::findOptimalAcceleration(int index, float dt) const
 {
   auto& posA = m_rvoPos[index];
   auto& velA = m_rvoVel[index];

@@ -5,7 +5,7 @@
 #include "engine/scene/pathDisplay.h"
 #include "engine/scene/square.h"
 #include "engine/shaderprogram.h"
-#include "flowfinity/flowfinity.h"
+#include "flowfinity/crowdsim.h"
 #include "flowfinity/navigation/visibilitygraph.h"
 
 #include "glm/ext/vector_float2.hpp"
@@ -43,7 +43,7 @@ private:
 
   GLuint vao;
 
-  FlowFinity m_flowFinity;
+  CrowdSim m_flowFinity;
   VisibilityGraph m_visgraph;
 
   ShaderProgram m_prog_flat;

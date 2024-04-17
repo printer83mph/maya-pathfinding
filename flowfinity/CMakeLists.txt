@@ -4,12 +4,12 @@ set(SOURCES
   src/navigation/obstacle.cpp
   src/navigation/visibilitygraph.cpp
   src/util/graph.cpp
-  src/flowfinity.cpp
+  src/crowdsim.cpp
   src/rvo.cpp
 )
 
 set(HEADERS
-  include/flowfinity/flowfinity.h
+  include/flowfinity/crowdsim.h
   include/flowfinity/navigation/visibilitygraph.h
   include/flowfinity/navigation/obstacle.h
   include/flowfinity/util/graph.h

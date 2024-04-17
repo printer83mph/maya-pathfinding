@@ -11,11 +11,11 @@
 /**
  * Class representing a crowd simulation instance
  */
-class FlowFinity
+class CrowdSim
 {
 public:
-  FlowFinity();
-  ~FlowFinity();
+  CrowdSim();
+  ~CrowdSim();
 
   int size() const;
   const std::vector<glm::vec2>& getAgentPositions() const;
