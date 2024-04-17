@@ -1,5 +1,6 @@
 #include "flowfinity/crowdsim.h"
 
+#include "flowfinity/navigation/navmethod.h"
 #include "flowfinity/rvo.h"
 
 #include "glm/fwd.hpp"
@@ -11,7 +12,9 @@
 #include <limits>
 #include <vector>
 
-CrowdSim::CrowdSim() : m_config(), m_rvoPos(), m_rvoVel(), m_rvoTarget(), m_possibleAccels()
+CrowdSim::CrowdSim()
+    : m_config(), m_rvoPos(), m_rvoVel(), m_rvoCurrentTarget(), m_rvoFinalTarget(),
+      m_possibleAccels()
 {
   float angle = 0.f;
   m_possibleAccels[32] = glm::vec2(0, 0);
@@ -32,7 +35,7 @@ int CrowdSim::size() const { return m_rvoPos.size(); }
 
 const std::vector<glm::vec2>& CrowdSim::getAgentPositions() const { return m_rvoPos; }
 const std::vector<glm::vec2>& CrowdSim::getAgentVelocities() const { return m_rvoVel; }
-const std::vector<glm::vec2>& CrowdSim::getAgentTargets() const { return m_rvoTarget; }
+const std::vector<glm::vec2>& CrowdSim::getAgentTargets() const { return m_rvoCurrentTarget; }
 
 void CrowdSim::performTimeStep(float dt)
 {
@@ -61,11 +64,53 @@ void CrowdSim::performTimeStep(float dt)
   }
 }
 
+void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
+{
+  // spawn agents
+  if (m_config.inOutFlows.size() > 0 && size() < m_config.maxAgents) {
+    if ((float)std::rand() / (float)RAND_MAX < dt * 0.5f) {
+      // pick random inOutFlow pair
+      int inOutFlowIdx =
+          glm::floor((float)std::rand() / (float)RAND_MAX * m_config.inOutFlows.size());
+      auto& inOutFlow = m_config.inOutFlows.at(inOutFlowIdx);
+      addAgent(inOutFlow.first, inOutFlow.second);
+    }
+  }
+
+  // loop through backwards in case we remove agents
+  for (int i = size() - 1; i >= 0; --i) {
+    auto pos = m_rvoPos[i];
+    auto currentTarget = m_rvoVel[i];
+    auto finalTarget = m_rvoVel[i];
+
+    if (glm::distance(pos, currentTarget) < 0.05f) {
+      // Check if current target is final target (we've reached the end)
+      if (glm::distance(currentTarget, finalTarget) < 0.01f) {
+        removeAgent(i);
+        continue;
+      } else {
+        // reached our current target - recompute
+        computeCurrentTarget(i, navMethod);
+        continue;
+      }
+    }
+
+    // based on some chance, recompute current target
+    if ((float)std::rand() / (float)RAND_MAX < dt * 1.f) {
+      computeCurrentTarget(i, navMethod);
+    }
+  }
+
+  // run physics
+  performTimeStep(dt);
+}
+
 void CrowdSim::addAgent(const glm::vec2& pos, const glm::vec2& target)
 {
   m_rvoPos.push_back(pos);
   m_rvoVel.push_back(glm::vec2(0, 0));
-  m_rvoTarget.push_back(target);
+  m_rvoCurrentTarget.push_back(target);
+  m_rvoFinalTarget.push_back(target);
 }
 
 void CrowdSim::removeAgent(int index)
@@ -75,22 +120,45 @@ void CrowdSim::removeAgent(int index)
   }
   m_rvoPos.erase(std::next(m_rvoPos.begin(), index));
   m_rvoVel.erase(std::next(m_rvoVel.begin(), index));
-  m_rvoTarget.erase(std::next(m_rvoTarget.begin(), index));
+  m_rvoCurrentTarget.erase(std::next(m_rvoCurrentTarget.begin(), index));
+  m_rvoFinalTarget.erase(std::next(m_rvoFinalTarget.begin(), index));
 }
 
-void CrowdSim::setAgentTarget(int index, const glm::vec2& target)
+void CrowdSim::setAgentCurrentTarget(int index, const glm::vec2& target)
 {
   if (index >= m_rvoPos.size()) {
     throw "index out of bounds lol";
   }
-  m_rvoTarget[index] = target;
+  m_rvoCurrentTarget[index] = target;
+}
+
+void CrowdSim::setAgentFinalTarget(int index, const glm::vec2& target)
+{
+  if (index >= m_rvoPos.size()) {
+    throw "index out of bounds lol";
+  }
+  m_rvoFinalTarget[index] = target;
+}
+
+void CrowdSim::computeCurrentTarget(int index, NavMethod* navMethod)
+{
+  auto pos = m_rvoPos.at(index);
+  auto path = navMethod->getPath(pos, m_rvoFinalTarget.at(index));
+
+  int currentTargetIndex = 0;
+  while (glm::distance(pos, path.at(currentTargetIndex)) < 0.05 &&
+         currentTargetIndex <= path.size() - 1) {
+    ++currentTargetIndex;
+  }
+
+  m_rvoCurrentTarget[index] = path.at(currentTargetIndex);
 }
 
 glm::vec2 CrowdSim::findOptimalAcceleration(int index, float dt) const
 {
   auto& posA = m_rvoPos[index];
   auto& velA = m_rvoVel[index];
-  auto& targetA = m_rvoTarget[index];
+  auto& targetA = m_rvoCurrentTarget[index];
 
   glm::vec2 idealAccel = (targetA - posA) * m_config.acceleration;
   {
@@ -108,7 +176,7 @@ glm::vec2 CrowdSim::findOptimalAcceleration(int index, float dt) const
 
     auto& posB = m_rvoPos[i];
     auto& velB = m_rvoVel[i];
-    auto& targetB = m_rvoTarget[i];
+    auto& targetB = m_rvoCurrentTarget[i];
 
     VelocityObstacle vo =
         VelocityObstacle(posA, velA, posB, velB, m_config.radius, m_config.radius);

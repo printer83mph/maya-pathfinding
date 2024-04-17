@@ -179,7 +179,7 @@ void Editor::update(float dt)
           auto& waypoint = m_paths[0].at(j);
           if (glm::distance(pos, glm::vec2(waypoint.x, waypoint.z)) < 0.1f) {
             auto& tgt = m_paths[0].at(j + 1);
-            m_flowFinity.setAgentTarget(i, glm::vec2(tgt.x, tgt.z));
+            m_flowFinity.setAgentCurrentTarget(i, glm::vec2(tgt.x, tgt.z));
             continue;
           }
         }
