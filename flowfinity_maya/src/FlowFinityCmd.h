@@ -2,8 +2,6 @@
 
 #include <maya/MPxCommand.h>
 
-#include <string>
-
 class FlowFinityCmd : public MPxCommand
 {
 public:

@@ -1,4 +1,6 @@
 target_sources(flowfinityMaya PRIVATE
+  FlowFinityNode.cpp
+  FlowFinityNode.h
   FlowFinityCmd.cpp
   FlowFinityCmd.h
   PluginMain.cpp
