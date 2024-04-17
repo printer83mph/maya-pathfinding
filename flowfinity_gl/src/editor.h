@@ -1,13 +1,14 @@
+#pragma once
+
 #include "engine/camera.h"
 #include "engine/scene/cube.h"
 #include "engine/scene/pathDisplay.h"
 #include "engine/scene/square.h"
 #include "engine/shaderprogram.h"
-#include "flowfinity.h"
-#include "glm/ext/vector_float2.hpp"
-#include "obstacle.h"
+#include "flowfinity/crowdsim.h"
+#include "flowfinity/navigation/visibilitygraph.h"
 
-#include <flowfinity.h>
+#include "glm/ext/vector_float2.hpp"
 
 #include <SDL_events.h>
 #include <SDL_video.h>
@@ -42,7 +43,8 @@ private:
 
   GLuint vao;
 
-  FlowFinity m_flowFinity;
+  CrowdSim m_flowFinity;
+  VisibilityGraph m_visgraph;
 
   ShaderProgram m_prog_flat;
   ShaderProgram m_prog_lambert;
@@ -53,7 +55,6 @@ private:
   bool m_drawPath;
   bool m_graphCreated;
 
-  std::vector<Obstacle> m_obstacles;
   std::vector<CubeTransform> m_cubeTransforms;
   std::vector<std::vector<glm::vec3>> m_paths;
 

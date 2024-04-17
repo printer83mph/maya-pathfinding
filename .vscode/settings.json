@@ -1,7 +1,7 @@
 {
   "cmake.buildDirectory": "${workspaceFolder}/build_debug",
   "clangd.arguments": [
-    "-background-index",
-    "-compile-commands-dir=build_debug"
+    "--background-index",
+    "--compile-commands-dir=build_debug"
   ],
 }

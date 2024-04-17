@@ -21,7 +21,7 @@ build_*/
 imgui.ini
 
 # vscode
-.vscode
+.vscode/*
 !.vscode/extensions.json
 !.vscode/launch.json
 !.vscode/settings.json

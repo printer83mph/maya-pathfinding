@@ -1,6 +1,6 @@
 #include "FlowFinityCmd.h"
 
-#include <flowfinity.h>
+#include <flowfinity/crowdsim.h>
 
 #include <maya/MGlobal.h>
 
