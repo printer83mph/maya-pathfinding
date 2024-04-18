@@ -2,7 +2,7 @@
 
 VisibilityGraph::VisibilityGraph()
     : m_nextVertex(-1), m_graph(0), m_NodeToPoint(), m_PointToNode(), edges(), m_waypoints(),
-      m_obstacles()
+      m_obstacles(), m_graphCreated(false)
 {
 }
 
@@ -13,8 +13,7 @@ std::vector<glm::vec2> VisibilityGraph::getPath(const glm::vec2& start, const gl
   // get path
   clearEndPoints();
   auto paths = std::vector<std::vector<glm::vec3>>();
-  addEndPoints({{glm::vec3(start.x, 0, start.y), glm::vec3(end.x, 0, end.y)}}, m_obstacles);
-  getDisjkstraPaths(paths);
+  getDisjkstraPaths({{glm::vec3(start.x, 0, start.y), glm::vec3(end.x, 0, end.y)}}, paths);
   auto pathVec3 = paths.at(0);
 
   // transform to vec2s
@@ -71,6 +70,8 @@ const std::vector<std::pair<glm::vec2, glm::vec2>>& VisibilityGraph::getEdges() 
 {
   return edges;
 }
+
+const std::vector<Obstacle>& VisibilityGraph::getObstacles() const { return m_obstacles; }
 
 float VisibilityGraph::getEdgeWeight(glm::vec2 point1, glm::vec2 point2)
 {
@@ -150,11 +151,12 @@ void VisibilityGraph::createGraph()
                                                       glm::vec2(edge.point2.x, edge.point2.z)));
     }
   }
+
+  m_graphCreated = true;
 }
 
 // Add endpoints to the graph and create edges between them and the obstacles
-void VisibilityGraph::addEndPoints(const std::vector<std::pair<glm::vec3, glm::vec3>>& endPoints,
-                                   const std::vector<Obstacle>& obstacles)
+void VisibilityGraph::addEndPoints(const std::vector<std::pair<glm::vec3, glm::vec3>>& endPoints)
 {
   int totalNodes = 0;
 
@@ -185,7 +187,7 @@ void VisibilityGraph::addEndPoints(const std::vector<std::pair<glm::vec3, glm::v
     m_graph.addVertices(2);
 
     // Create an edge between the two endpoints if they are visible
-    if (Obstacle::isVisibleExternal(start, end, obstacles)) {
+    if (Obstacle::isVisibleExternal(start, end, m_obstacles)) {
       m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[end], glm::distance(start, end));
       edges.push_back(
           std::pair<glm::vec2, glm::vec2>(glm::vec2(start.x, start.z), glm::vec2(end.x, end.z)));
@@ -193,16 +195,16 @@ void VisibilityGraph::addEndPoints(const std::vector<std::pair<glm::vec3, glm::v
 
     // For each obstacle, check if the edge between the start and end point to
     // each obstacle point is visible, if so create an edge
-    for (auto& obstacle : obstacles) {
+    for (auto& obstacle : m_obstacles) {
       // TODO: Optimize
       for (auto& edge : obstacle.getBounds()) {
-        if (obstacle.isVisible(start, edge.point1, obstacles)) {
+        if (obstacle.isVisible(start, edge.point1, m_obstacles)) {
           m_graph.addEdge(m_NodeToPoint[start], m_NodeToPoint[edge.point1],
                           glm::distance(start, edge.point1));
           edges.push_back(std::pair<glm::vec2, glm::vec2>(glm::vec2(start.x, start.z),
                                                           glm::vec2(edge.point1.x, edge.point1.z)));
         }
-        if (obstacle.isVisible(end, edge.point1, obstacles)) {
+        if (obstacle.isVisible(end, edge.point1, m_obstacles)) {
           m_graph.addEdge(m_NodeToPoint[end], m_NodeToPoint[edge.point1],
                           glm::distance(end, edge.point1));
           edges.push_back(std::pair<glm::vec2, glm::vec2>(glm::vec2(end.x, end.z),
@@ -246,8 +248,19 @@ int VisibilityGraph::minDistance(int dist[], bool sptSet[], int V)
   return min_index;
 }
 
-void VisibilityGraph::getDisjkstraPaths(std::vector<std::vector<glm::vec3>>& paths)
+void VisibilityGraph::getDisjkstraPaths(
+    const std::vector<std::pair<glm::vec3, glm::vec3>>& endpoints,
+    std::vector<std::vector<glm::vec3>>& paths)
 {
+  clearEndPoints();
+
+  if (!m_graphCreated) {
+    createGraph();
+  }
+
+  addEndPoints(endpoints);
+
+  // run dijkstra for each path
   for (auto& pathPoint : m_endPoints) {
     std::vector<glm::vec3> path;
     int src = pathPoint.first;
