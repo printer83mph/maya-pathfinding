@@ -16,6 +16,18 @@ public:
 
   static const char* className();
 
+  // per-agent config params
+  static MObject agentMaxSpeed;
+  static MObject agentAcceleration;
+  static MObject agentDrag;
+  static MObject agentRadius;
+  static MObject agentAggressiveness;
+
+  // spawning params
+  static MObject spawnRate;
+  static MObject maxAgents;
+
+  // frame logic
   static MObject startState;
   static MObject currentState;
   static MObject nextState;
