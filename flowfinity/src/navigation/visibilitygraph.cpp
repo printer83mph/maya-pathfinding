@@ -88,7 +88,7 @@ void VisibilityGraph::addPoint(const glm::vec3& point)
 }
 
 // Just create a graph with the given obstacles
-void VisibilityGraph::createGraph(const std::vector<Obstacle>& obstacles)
+void VisibilityGraph::createGraph()
 {
   // Make sure to clear the graph and maps
   m_NodeToPoint.clear();
@@ -99,24 +99,24 @@ void VisibilityGraph::createGraph(const std::vector<Obstacle>& obstacles)
   // Get total amount of vertices
   int totalNodes = 0;
   // Record total amount of waypoints
-  for (auto& obstacle : obstacles) {
+  for (auto& obstacle : m_obstacles) {
     totalNodes += obstacle.getBoundsCount();
   }
   m_graph = Graph(totalNodes);
 
   // For each obstacle
-  for (auto& obstacle : obstacles) {
+  for (auto& obstacle : m_obstacles) {
     // For each edge in the obstacle
     for (auto& edge : obstacle.getBounds()) {
       // For each other obstacle
-      for (auto& obstacle2 : obstacles) {
+      for (auto& obstacle2 : m_obstacles) {
         // For each edge in the other obstacle
         if (&obstacle == &obstacle2) {
           continue;
         }
         for (auto& edge2 : obstacle2.getBounds()) {
           // If the two edges are visible to each other, add an edge to the map
-          if (obstacle.isVisible(edge2.point1, edge.point1, obstacles)) {
+          if (obstacle.isVisible(edge2.point1, edge.point1, m_obstacles)) {
             // If either of the points are not in the map, add them
             addPoint(edge.point1);
             addPoint(edge2.point1);
@@ -140,7 +140,7 @@ void VisibilityGraph::createGraph(const std::vector<Obstacle>& obstacles)
   }
 
   // Add adjacent points within the same obstacle to the graph
-  for (auto& obstacle : obstacles) {
+  for (auto& obstacle : m_obstacles) {
     for (auto& edge : obstacle.getBounds()) {
       // All obstacle points are guaranteed to be in the map, so just add them
       // using the maps

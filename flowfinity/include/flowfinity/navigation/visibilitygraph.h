@@ -24,6 +24,8 @@ public:
   void addCubeObstacle(const glm::vec2& translation, const glm::vec2& scale, float rotation);
   void clearObstacles();
 
+  void createGraph();
+
 private:
   // Graph logic
   int m_nextVertex;
@@ -38,8 +40,6 @@ private:
   const std::vector<std::pair<glm::vec2, glm::vec2>>& getEdges() const;
   float getEdgeWeight(glm::vec2 point1, glm::vec2 point2);
   void addPoint(const glm::vec3& point);
-
-  void createGraph(const std::vector<Obstacle>& obstacles);
 
   void addEndPoints(const std::vector<std::pair<glm::vec3, glm::vec3>>& endPoints,
                     const std::vector<Obstacle>& obstacles);

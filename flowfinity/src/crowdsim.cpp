@@ -8,6 +8,7 @@
 #include "glm/gtc/constants.hpp"
 #include "glm/trigonometric.hpp"
 
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <vector>
@@ -41,6 +42,18 @@ void CrowdSim::importAgents(const std::vector<glm::vec2>& pos, const std::vector
   m_rvoVel = vel;
   m_rvoCurrentTarget = currentTarget;
   m_rvoFinalTarget = finalTarget;
+}
+
+void CrowdSim::importAgents(const std::vector<glm::vec2>& pos, const std::vector<glm::vec2>& vel)
+{
+  m_rvoPos = pos;
+  m_rvoVel = vel;
+
+  // fill with empty data (awesome)
+  for (int i = 0; i < pos.size(); ++i) {
+    m_rvoCurrentTarget.push_back(glm::vec2(0, 0));
+    m_rvoFinalTarget.push_back(glm::vec2(0, 0));
+  }
 }
 
 void CrowdSim::unfastComputeAllTargetsFromFirstInOutFlow(NavMethod* navMethod)
@@ -105,7 +118,7 @@ void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
     auto currentTarget = m_rvoCurrentTarget.at(i);
     auto finalTarget = m_rvoFinalTarget.at(i);
 
-    if (glm::distance(pos, currentTarget) < 0.05f) {
+    if (glm::distance(pos, currentTarget) < 0.1f) {
       // Check if current target is final target (we've reached the end)
       if (glm::distance(currentTarget, finalTarget) < 0.01f) {
         removeAgent(i);
@@ -167,8 +180,10 @@ void CrowdSim::computeCurrentTarget(int index, NavMethod* navMethod)
   auto pos = m_rvoPos.at(index);
   auto path = navMethod->getPath(pos, m_rvoFinalTarget.at(index));
 
+  std::cout << path.size() << std::endl;
+
   int currentTargetIndex = 0;
-  while (glm::distance(pos, path.at(currentTargetIndex)) < 0.05 &&
+  while (glm::distance(pos, path.at(currentTargetIndex)) < 0.15 &&
          currentTargetIndex <= path.size() - 1) {
     ++currentTargetIndex;
   }

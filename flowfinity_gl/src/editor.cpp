@@ -64,7 +64,7 @@ void Editor::createGraph()
   m_visgraph.clearEndPoints();
   m_paths.clear();
   m_pathDisplay.clear();
-  m_visgraph.createGraph(m_visgraph.m_obstacles);
+  m_visgraph.createGraph();
   m_graphCreated = true;
 }
 

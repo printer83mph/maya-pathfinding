@@ -2,6 +2,8 @@
 
 #include <maya/MPxNode.h>
 
+#include "flowfinity/navigation/visibilitygraph.h"
+
 class FlowFinityNode : public MPxNode
 {
 public:
@@ -18,4 +20,6 @@ public:
   static MObject currentState;
   static MObject nextState;
   static MObject currentTime;
+
+  static VisibilityGraph m_visibilityGraph;
 };
