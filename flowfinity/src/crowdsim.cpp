@@ -99,9 +99,11 @@ void CrowdSim::performTimeStep(float dt)
   }
 }
 
+#define BETA
 void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
 {
   // spawn agents
+#ifndef BETA
   if (m_config.inOutFlows.size() > 0 && size() < m_config.maxAgents) {
     if ((float)std::rand() / (float)RAND_MAX < dt * 0.5f) {
       // pick random inOutFlow pair
@@ -111,6 +113,7 @@ void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
       addAgent(inOutFlow.first, inOutFlow.second);
     }
   }
+#endif
 
   // loop through backwards in case we remove agents
   for (int i = size() - 1; i >= 0; --i) {
@@ -121,7 +124,9 @@ void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
     if (glm::distance(pos, currentTarget) < 0.1f) {
       // Check if current target is final target (we've reached the end)
       if (glm::distance(currentTarget, finalTarget) < 0.01f) {
+#ifndef BETA
         removeAgent(i);
+#endif
         continue;
       } else {
         // reached our current target - recompute
@@ -205,6 +210,7 @@ glm::vec2 CrowdSim::findOptimalAcceleration(int index, float dt) const
     }
   }
   const glm::vec2* bestAcceleration = &idealAccel;
+#ifndef BETA
   float bestPenalty = std::numeric_limits<float>::max();
 
   for (int i = 0; i < m_rvoPos.size(); ++i) {
@@ -231,6 +237,7 @@ glm::vec2 CrowdSim::findOptimalAcceleration(int index, float dt) const
       }
     }
   }
+#endif
 
   return *bestAcceleration;
 }
