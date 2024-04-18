@@ -3,6 +3,7 @@
 #include "FlowFinityNode.h"
 
 #include <maya/MFnPlugin.h>
+#include <maya/MGlobal.h>
 #include <maya/MPxCommand.h>
 #include <maya/MStatus.h>
 
@@ -23,6 +24,13 @@ MStatus initializePlugin(MObject obj)
     status.perror("registerCommand");
     return status;
   }
+  // Create Menu
+  MString melCommand = "if (`menu -exists FlowFinityMenu` == 0) {\n\tmenu -label \"FlowFinity\" "
+                       "-parent $gMainWindow FlowFinityMenu;\n}";
+  melCommand +=
+      "\nmenuItem -label \"FlowFinityGUI\" -parent FlowFinityMenu -command \"FlowFinityCmd\";";
+
+  status = MGlobal::executeCommand(melCommand, true);
 
   return status;
 }
@@ -43,6 +51,10 @@ MStatus uninitializePlugin(MObject obj)
     status.perror("deregisterNode");
     return status;
   }
+
+  // Remove Menu
+  MString melCommand = "if (`menu -exists FlowFinityMenu`) deleteUI FlowFinityMenu;";
+  MGlobal::executeCommand(melCommand, true);
 
   return status;
 }

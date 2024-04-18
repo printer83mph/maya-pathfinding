@@ -24,6 +24,8 @@ MStatus FlowFinityCmd::doIt(const MArgList& args)
   connectAttr time1.outTime FlowFinityNode1.currentTime;
 
   */
+
+  // All testing stuff : comment this and replace with running GUI with python script
   // Get the selected objects
   MSelectionList selection;
   MGlobal::getActiveSelectionList(selection);
