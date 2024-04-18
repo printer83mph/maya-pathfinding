@@ -7,15 +7,19 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 find_package(Maya REQUIRED)
 
 set(SOURCES
-    src/FlowFinityNode.cpp
     src/FlowFinityCmd.cpp
+    src/FlowFinityNode.cpp
     src/PluginMain.cpp
 )
 
 set(HEADERS
-    src/FlowFinityNode.h
     src/FlowFinityCmd.h
+    src/FlowFinityNode.h
 )
+
+# read python script into file
+file(READ python/FlowFinityGUI.py FILE_CONTENT)
+configure_file(src/FlowFinityCmd.cpp.in src/FlowFinityCmd.cpp @ONLY)
 
 add_library(flowfinityMaya SHARED ${SOURCES} ${HEADERS})
 
