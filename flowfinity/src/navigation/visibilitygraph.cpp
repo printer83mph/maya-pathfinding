@@ -18,8 +18,10 @@ std::vector<glm::vec2> VisibilityGraph::getPath(const glm::vec2& start, const gl
 
   // transform to vec2s
   auto pathVec2 = std::vector<glm::vec2>(pathVec3.size());
+  int i = 0;
   for (auto& pos : pathVec3) {
-    pathVec2.push_back(glm::vec2(pos.x, pos.z));
+    pathVec2[i] = glm::vec2(pos.x, pos.z);
+    i++;
   }
   return pathVec2;
 }
@@ -94,6 +96,8 @@ void VisibilityGraph::createGraph()
   // Make sure to clear the graph and maps
   m_NodeToPoint.clear();
   m_PointToNode.clear();
+  m_endPoints.clear();
+  m_waypoints.clear();
   edges.clear();
   m_nextVertex = -1;
 
@@ -145,6 +149,8 @@ void VisibilityGraph::createGraph()
     for (auto& edge : obstacle.getBounds()) {
       // All obstacle points are guaranteed to be in the map, so just add them
       // using the maps
+      addPoint(edge.point1);
+      addPoint(edge.point2);
       m_graph.addEdge(m_NodeToPoint[edge.point1], m_NodeToPoint[edge.point2],
                       glm::distance(edge.point1, edge.point2));
       edges.push_back(std::pair<glm::vec2, glm::vec2>(glm::vec2(edge.point1.x, edge.point1.z),

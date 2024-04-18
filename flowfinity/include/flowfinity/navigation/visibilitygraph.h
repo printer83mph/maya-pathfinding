@@ -21,6 +21,7 @@ public:
 
   void addCubeObstacle(const glm::vec2& translation, const glm::vec2& scale, float rotation);
   void clearObstacles();
+  void clearEndPoints();
 
   void createGraph();
 
@@ -47,7 +48,6 @@ private:
   void addPoint(const glm::vec3& point);
 
   void addEndPoints(const std::vector<std::pair<glm::vec3, glm::vec3>>& endPoints);
-  void clearEndPoints();
 
   void getDisjkstraPaths(const std::vector<std::pair<glm::vec3, glm::vec3>>& endpoints,
                          std::vector<std::vector<glm::vec3>>& outPaths);

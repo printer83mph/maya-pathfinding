@@ -69,13 +69,18 @@ void Editor::createGraph()
 
 void Editor::getDisjkstraPath(std::vector<std::pair<glm::vec3, glm::vec3>> endpoints)
 {
+  // Create graph just in case there are other obstacles that havent been added to the graph yet
+  createGraph();
+
   if (m_drawPath) {
+    m_visgraph.clearEndPoints();
     m_paths.clear();
     m_pathDisplay.clear();
   }
 
   for (auto& inOutPair : endpoints) {
-    auto path = m_visgraph.getPath(inOutPair.first, inOutPair.second);
+    auto path = m_visgraph.getPath(glm::vec2(inOutPair.first.x, inOutPair.first.z),
+                                   glm::vec2(inOutPair.second.x, inOutPair.second.z));
     auto path_vec3 = std::vector<glm::vec3>();
     for (auto& point : path) {
       path_vec3.push_back({point.x, 0, point.y});
