@@ -1,6 +1,8 @@
 find_package(glm CONFIG REQUIRED)
+find_package(recastnavigation CONFIG REQUIRED)
 
 set(SOURCES
+  src/navigation/navmesh.cpp
   src/navigation/navmethod.cpp
   src/navigation/visibilitygraph.cpp
   src/navigation/obstacle.cpp
@@ -10,6 +12,7 @@ set(SOURCES
 )
 
 set(HEADERS
+  include/flowfinity/navigation/navmesh.h
   include/flowfinity/navigation/navmethod.h
   include/flowfinity/navigation/visibilitygraph.h
   include/flowfinity/navigation/obstacle.h
@@ -31,4 +34,8 @@ target_include_directories(flowfinity PRIVATE
 
 target_link_libraries(flowfinity PUBLIC
 	glm::glm
+)
+
+target_link_libraries(flowfinity PRIVATE
+  RecastNavigation::Detour
 )

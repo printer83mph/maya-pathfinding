@@ -1,7 +1,8 @@
 {
   "dependencies": [
     "glew",
+    "glm",
     "sdl2",
-    "glm"
+    "recastnavigation"
   ]
 }
