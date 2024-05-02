@@ -48,14 +48,14 @@ MStatus FlowFinityNode::initialize()
   m_visibilityGraph = VisibilityGraph();
 
   // These would be inputs from the GUI
-  glm::vec2 translation = glm::vec2(1, 4);
-  glm::vec2 scale = glm::vec2(2, 1);
+  glm::vec2 translation = glm::vec2(3, 3);
+  glm::vec2 scale = glm::vec2(2, 2);
 
-  glm::vec2 translation2 = glm::vec2(5, 6);
+  glm::vec2 translation2 = glm::vec2(7, 7);
   glm::vec2 scale2 = glm::vec2(1, 2);
 
-  m_visibilityGraph.addCubeObstacle(translation, scale, 0.0f);
-  m_visibilityGraph.addCubeObstacle(translation2, scale2, 100.0f);
+  m_visibilityGraph.addCubeObstacle(translation, scale, 60.0f);
+  m_visibilityGraph.addCubeObstacle(translation2, scale2, 140.0f);
 
   m_visibilityGraph.createGraph();
 
@@ -184,7 +184,7 @@ MStatus FlowFinityNode::compute(const MPlug& plug, MDataBlock& data)
 
     // Create a Crowd Sim Instance
     CrowdSim crowdSim;
-    crowdSim.m_config.inOutFlows.push_back(std::make_pair(glm::vec2(-5, -5), glm::vec2(10, 10)));
+    crowdSim.m_config.inOutFlows.push_back(std::make_pair(glm::vec2(-5, -5), glm::vec2(30, 30)));
 
     MDataHandle agentMaxSpeedHandle = data.inputValue(agentMaxSpeed);
     statCheck(stat, "failed to get agentMaxSpeedHandle");
