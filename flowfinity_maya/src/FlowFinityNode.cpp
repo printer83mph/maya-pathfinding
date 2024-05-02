@@ -184,7 +184,7 @@ MStatus FlowFinityNode::compute(const MPlug& plug, MDataBlock& data)
 
     // Create a Crowd Sim Instance
     CrowdSim crowdSim;
-    crowdSim.m_config.inOutFlows.push_back(std::make_pair(glm::vec2(-5, -5), glm::vec2(30, 30)));
+    crowdSim.m_config.inOutFlows.push_back(std::make_pair(glm::vec2(-5, -5), glm::vec2(10, 10)));
 
     MDataHandle agentMaxSpeedHandle = data.inputValue(agentMaxSpeed);
     statCheck(stat, "failed to get agentMaxSpeedHandle");
