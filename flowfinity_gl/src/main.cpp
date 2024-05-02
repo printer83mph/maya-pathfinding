@@ -207,10 +207,6 @@ int main(int, char**)
       // for 3 paths
       static float path1start[2] = {0.0f, 0.0f};
       static float path1end[2] = {0.0f, 0.0f};
-      static float path2start[2] = {0.0f, 0.0f};
-      static float path2end[2] = {0.0f, 0.0f};
-      static float path3start[2] = {0.0f, 0.0f};
-      static float path3end[2] = {0.0f, 0.0f};
 
       ImGui::Begin("Add Obstacles!"); // Create a window called "Hello, world!"
                                       // and append into it.
@@ -243,14 +239,6 @@ int main(int, char**)
         ImGui::InputFloat2(("Start #" + std::to_string(1)).c_str(), path1start);
         ImGui::InputFloat2(("End #" + std::to_string(1)).c_str(), path1end);
         ImGui::Spacing();
-
-        ImGui::InputFloat2(("Start #" + std::to_string(2)).c_str(), path2start);
-        ImGui::InputFloat2(("End #" + std::to_string(2)).c_str(), path2end);
-        ImGui::Spacing();
-
-        ImGui::InputFloat2(("Start #" + std::to_string(3)).c_str(), path3start);
-        ImGui::InputFloat2(("End #" + std::to_string(3)).c_str(), path3end);
-        ImGui::Spacing();
       }
 
       // if (ImGui::Button(
@@ -268,10 +256,6 @@ int main(int, char**)
         std::vector<std::pair<glm::vec3, glm::vec3>> endPoints;
         endPoints.push_back(
             {glm::vec3(path1start[0], 0, path1start[1]), glm::vec3(path1end[0], 0, path1end[1])});
-        endPoints.push_back(
-            {glm::vec3(path2start[0], 0, path2start[1]), glm::vec3(path2end[0], 0, path2end[1])});
-        endPoints.push_back(
-            {glm::vec3(path3start[0], 0, path3start[1]), glm::vec3(path3end[0], 0, path3end[1])});
         editor.getDisjkstraPath(endPoints);
       }
 

@@ -8,6 +8,7 @@
 #include "glm/gtc/constants.hpp"
 #include "glm/trigonometric.hpp"
 
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <vector>
@@ -41,6 +42,18 @@ void CrowdSim::importAgents(const std::vector<glm::vec2>& pos, const std::vector
   m_rvoVel = vel;
   m_rvoCurrentTarget = currentTarget;
   m_rvoFinalTarget = finalTarget;
+}
+
+void CrowdSim::importAgents(const std::vector<glm::vec2>& pos, const std::vector<glm::vec2>& vel)
+{
+  m_rvoPos = pos;
+  m_rvoVel = vel;
+
+  // fill with empty data (awesome)
+  for (int i = 0; i < pos.size(); ++i) {
+    m_rvoCurrentTarget.push_back(glm::vec2(0, 0));
+    m_rvoFinalTarget.push_back(glm::vec2(0, 0));
+  }
 }
 
 void CrowdSim::unfastComputeAllTargetsFromFirstInOutFlow(NavMethod* navMethod)
@@ -86,9 +99,11 @@ void CrowdSim::performTimeStep(float dt)
   }
 }
 
+#define BETA
 void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
 {
   // spawn agents
+#ifndef BETA
   if (m_config.inOutFlows.size() > 0 && size() < m_config.maxAgents) {
     if ((float)std::rand() / (float)RAND_MAX < dt * 0.5f) {
       // pick random inOutFlow pair
@@ -98,6 +113,7 @@ void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
       addAgent(inOutFlow.first, inOutFlow.second);
     }
   }
+#endif
 
   // loop through backwards in case we remove agents
   for (int i = size() - 1; i >= 0; --i) {
@@ -105,10 +121,12 @@ void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
     auto currentTarget = m_rvoCurrentTarget.at(i);
     auto finalTarget = m_rvoFinalTarget.at(i);
 
-    if (glm::distance(pos, currentTarget) < 0.05f) {
+    if (glm::distance(pos, currentTarget) < 0.1f) {
       // Check if current target is final target (we've reached the end)
       if (glm::distance(currentTarget, finalTarget) < 0.01f) {
+#ifndef BETA
         removeAgent(i);
+#endif
         continue;
       } else {
         // reached our current target - recompute
@@ -167,8 +185,10 @@ void CrowdSim::computeCurrentTarget(int index, NavMethod* navMethod)
   auto pos = m_rvoPos.at(index);
   auto path = navMethod->getPath(pos, m_rvoFinalTarget.at(index));
 
+  std::cout << path.size() << std::endl;
+
   int currentTargetIndex = 0;
-  while (glm::distance(pos, path.at(currentTargetIndex)) < 0.05 &&
+  while (glm::distance(pos, path.at(currentTargetIndex)) < 0.15 &&
          currentTargetIndex <= path.size() - 1) {
     ++currentTargetIndex;
   }
@@ -190,6 +210,7 @@ glm::vec2 CrowdSim::findOptimalAcceleration(int index, float dt) const
     }
   }
   const glm::vec2* bestAcceleration = &idealAccel;
+#ifndef BETA
   float bestPenalty = std::numeric_limits<float>::max();
 
   for (int i = 0; i < m_rvoPos.size(); ++i) {
@@ -216,6 +237,7 @@ glm::vec2 CrowdSim::findOptimalAcceleration(int index, float dt) const
       }
     }
   }
+#endif
 
   return *bestAcceleration;
 }

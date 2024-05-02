@@ -39,6 +39,7 @@ public:
   void importAgents(const std::vector<glm::vec2>& pos, const std::vector<glm::vec2>& vel,
                     const std::vector<glm::vec2>& currentTarget,
                     const std::vector<glm::vec2>& finalTarget);
+  void importAgents(const std::vector<glm::vec2>& pos, const std::vector<glm::vec2>& vel);
   // awesome function that forcibly uses the first in/out flow pair and calculates current target
   // for all agents
   void unfastComputeAllTargetsFromFirstInOutFlow(NavMethod* navMethod);

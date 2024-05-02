@@ -61,26 +61,33 @@ void Editor::addActors(int numAgents)
 
 void Editor::createGraph()
 {
-  m_visgraph.clearEndPoints();
   m_paths.clear();
   m_pathDisplay.clear();
-  m_visgraph.createGraph(m_visgraph.m_obstacles);
+  m_visgraph.createGraph();
   m_graphCreated = true;
 }
 
 void Editor::getDisjkstraPath(std::vector<std::pair<glm::vec3, glm::vec3>> endpoints)
 {
-  if (!m_graphCreated) {
-    createGraph();
-  }
+  // Create graph just in case there are other obstacles that havent been added to the graph yet
+  createGraph();
+
   if (m_drawPath) {
     m_visgraph.clearEndPoints();
     m_paths.clear();
     m_pathDisplay.clear();
   }
 
-  m_visgraph.addEndPoints(endpoints, m_visgraph.m_obstacles);
-  m_visgraph.getDisjkstraPaths(m_paths);
+  for (auto& inOutPair : endpoints) {
+    auto path = m_visgraph.getPath(glm::vec2(inOutPair.first.x, inOutPair.first.z),
+                                   glm::vec2(inOutPair.second.x, inOutPair.second.z));
+    auto path_vec3 = std::vector<glm::vec3>();
+    for (auto& point : path) {
+      path_vec3.push_back({point.x, 0, point.y});
+    }
+    m_paths.push_back(path_vec3);
+  }
+
   std::vector<glm::vec3> colors = {glm::vec3(1, 1, 1), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)};
   int i = 0;
   for (auto& path : m_paths) {
@@ -148,44 +155,7 @@ int Editor::initialize(SDL_Window* window, SDL_GLContext gl_context)
 void Editor::update(float dt)
 {
   // Run time step for simulation
-  m_flowFinity.performTimeStep(dt);
-
-  // spawn agents
-  if (m_paths.size() > 0) {
-    if (m_flowFinity.size() < 5 && m_paths[0].size() > 1) {
-      if ((float)std::rand() / (float)RAND_MAX < dt * 0.5f) {
-        m_flowFinity.addAgent(glm::vec2(m_paths[0].front().x, m_paths[0].front().z),
-                              glm::vec2(m_paths[0].at(1).x, m_paths[0].at(1).z));
-      }
-    }
-  }
-
-  // Delete agents that arrived at their targets
-  auto& agentPositions = m_flowFinity.getAgentPositions();
-  auto& agentTargets = m_flowFinity.getAgentCurrentTargets();
-  for (int i = m_flowFinity.size() - 1; i >= 0; --i) {
-    auto pos = agentPositions[i];
-    auto target = agentTargets[i];
-
-    if (glm::distance(pos, target) < 0.15f) {
-      auto& end = m_paths[0].back();
-      if (glm::distance(target, glm::vec2(end.x, end.z)) < 0.1f) {
-        // Agent has reached its final target
-        m_flowFinity.removeAgent(i);
-        continue;
-      } else {
-        // Loop through waypoints to check if we've reached one
-        for (int j = 0; j < m_paths[0].size() - 1; ++j) {
-          auto& waypoint = m_paths[0].at(j);
-          if (glm::distance(pos, glm::vec2(waypoint.x, waypoint.z)) < 0.1f) {
-            auto& tgt = m_paths[0].at(j + 1);
-            m_flowFinity.setAgentCurrentTarget(i, glm::vec2(tgt.x, tgt.z));
-            continue;
-          }
-        }
-      }
-    }
-  }
+  m_flowFinity.performTimeStep(dt, &m_visgraph);
 }
 
 void Editor::paint()
@@ -227,7 +197,7 @@ void Editor::paint()
   glDisable(GL_LIGHTING);
   glColor4f(0, 1, 0, 1);
   glBegin(GL_POINTS);
-  for (auto& obstacle : m_visgraph.m_obstacles) {
+  for (auto& obstacle : m_visgraph.getObstacles()) {
     for (auto& bound : obstacle.getBounds()) {
       glVertex3f(bound.point2.x, 0, bound.point2.z);
     }
