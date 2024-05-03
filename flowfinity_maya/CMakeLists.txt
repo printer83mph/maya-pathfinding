@@ -18,7 +18,8 @@ set(HEADERS
 )
 
 # read python script into file
-file(READ python/FlowFinityGUI.py FILE_CONTENT)
+file(READ python/FlowFinityGUI1.py FILE1_CONTENT)
+file(READ python/FlowFinityGUI2.py FILE2_CONTENT)
 configure_file(src/FlowFinityCmd.cpp.in src/FlowFinityCmd.cpp @ONLY)
 
 add_library(flowfinityMaya SHARED ${SOURCES} ${HEADERS})
