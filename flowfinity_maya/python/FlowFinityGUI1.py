@@ -76,6 +76,7 @@ class LocatorSelectionDialog(QtWidgets.QDialog):
 
     # Contains QListWidget to display all locators in the scene and a confirm button
     def create_widgets(self):
+        self.path_items = []
         self.locator_list = QtWidgets.QListWidget(self)
         self.locator_list.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.confirm_btn = QtWidgets.QPushButton("Confirm")
@@ -101,8 +102,22 @@ class LocatorSelectionDialog(QtWidgets.QDialog):
     def confirm_selection(self):
         selected_items = self.locator_list.selectedItems()
         if len(selected_items) == 2:
+            mesh = MeshItem(
+                selected_items[0].text(),
+                cmds.ls(selected_items[0].text(), long=True)[0],
+            )
+            self.path_items.append(mesh)
+            mesh2 = MeshItem(
+                selected_items[1].text(),
+                cmds.ls(selected_items[1].text(), long=True)[0],
+            )
+            self.path_items.append(mesh2)
+            print(self.path_items[0])
+            print(self.path_items[1])
+            print("test1")
             self.accept()
         else:
+            print("test2")
             QtWidgets.QMessageBox.warning(
                 self, "Warning", "Please select exactly two locators."
             )

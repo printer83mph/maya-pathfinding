@@ -254,6 +254,7 @@ class FlowFinityGUI(QtWidgets.QDialog):
 
     # Adds a path to the path list widget as a string of the form "start_locator -> end_locator" if it is not already present
     def add_path(self):
+        print("test2")
         dialog = LocatorSelectionDialog(self)
         if dialog.exec_():
             selected_items = dialog.locator_list.selectedItems()
@@ -265,7 +266,9 @@ class FlowFinityGUI(QtWidgets.QDialog):
                 for i in range(self.path_list_widget.count())
             ]:
                 self.path_list_widget.addItem(path)
-                
+                print(dialog.path_items[0])
+                self.paths.append(dialog.path_items[0])
+                self.paths.append(dialog.path_items[1])
 
     # Removes the selected path from the path list widget
     def remove_path(self):
@@ -296,6 +299,11 @@ class FlowFinityGUI(QtWidgets.QDialog):
 
     def create_flowfinity(self):
         # Create a new node called "flowfinity"
+        print("testing pleaseeee1")
+        print(self.paths)
+        print(self.paths[0].fullPath)
+        print(instanced_mesh.fullPath)
+        print("testing pleaseeee")
 
         flowfinity_node = cmds.createNode("FlowFinityNode")
 
@@ -315,6 +323,7 @@ class FlowFinityGUI(QtWidgets.QDialog):
             )
 
         # Connect the path locators transforms to the flowfinity node
+        print(cmds.listRelatives(self.paths[0].fullPath, parent=True, fullPath=True)[0])
         for index, path in enumerate(self.paths):
             transform_node = cmds.listRelatives(
                 path.fullPath, parent=True, fullPath=True
@@ -352,7 +361,11 @@ class FlowFinityGUI(QtWidgets.QDialog):
         cmds.connectAttr(
             str(flowfinity_node) + ".outputPoints", instancer + ".inputPoints"
         )
-        cmds.connectAttr(self.instanced_mesh.fullPath + '.outMesh', instancer + '.inputHierarchy', force=True)
+        cmds.connectAttr(
+            self.instanced_mesh.fullPath + ".outMesh",
+            instancer + ".inputHierarchy",
+            force=True,
+        )
 
 
 if __name__ == "__main__":
