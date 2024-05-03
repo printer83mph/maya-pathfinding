@@ -1,7 +1,6 @@
 #include "flowfinity/crowdsim.h"
 
 #include "flowfinity/navigation/navmethod.h"
-#include "flowfinity/rvo.h"
 
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
@@ -10,7 +9,6 @@
 
 #include <iostream>
 #include <iterator>
-#include <limits>
 #include <vector>
 
 CrowdSim::CrowdSim()

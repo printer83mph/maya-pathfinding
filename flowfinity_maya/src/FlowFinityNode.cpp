@@ -1,16 +1,30 @@
 #include "FlowFinityNode.h"
 #include "flowfinity/crowdsim.h"
+#include "flowfinity/encoding.h"
 #include "flowfinity/navigation/visibilitygraph.h"
-#include <maya/MDataHandle.h>
-#include <maya/MGlobal.h>
 
-#include <maya/MFloatArray.h>
+#include <maya/MApiNamespace.h>
+#include <maya/MArrayDataHandle.h>
+#include <maya/MDataHandle.h>
+#include <maya/MEulerRotation.h>
+#include <maya/MFloatMatrix.h>
 #include <maya/MFloatPointArray.h>
+#include <maya/MFnArrayAttrsData.h>
+#include <maya/MFnData.h>
+#include <maya/MFnMatrixAttribute.h>
 #include <maya/MFnNObjectData.h>
 #include <maya/MFnNumericAttribute.h>
+#include <maya/MFnStringData.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnUnitAttribute.h>
+#include <maya/MFnVectorArrayData.h>
+#include <maya/MGlobal.h>
+#include <maya/MMatrix.h>
+#include <maya/MVector.h>
+#include <maya/MVectorArray.h>
 #include <maya/MnParticle.h>
+
+#include <string>
 
 const MTypeId FlowFinityNode::id(0x85003);
 
@@ -21,11 +35,14 @@ MObject FlowFinityNode::agentRadius;
 MObject FlowFinityNode::agentAggressiveness;
 MObject FlowFinityNode::spawnRate;
 MObject FlowFinityNode::maxAgents;
-MObject FlowFinityNode::startState;
-MObject FlowFinityNode::currentState;
-MObject FlowFinityNode::nextState;
+MObject FlowFinityNode::obstacleTransforms;
+MObject FlowFinityNode::inOutFlows;
+MObject FlowFinityNode::startTime;
+MObject FlowFinityNode::endTime;
+// Encoded simulation data, dependent on sim config attrs. `outputPoints` is dependent on this.
+MObject FlowFinityNode::simulationData;
 MObject FlowFinityNode::currentTime;
-VisibilityGraph FlowFinityNode::m_visibilityGraph;
+MObject FlowFinityNode::outputPoints;
 
 void* FlowFinityNode::creator() { return new FlowFinityNode(); }
 
@@ -44,8 +61,8 @@ MStatus FlowFinityNode::initialize()
 
   MFnNumericAttribute nAttr;
   MFnTypedAttribute tAttr;
-
-  m_visibilityGraph = VisibilityGraph();
+  MFnUnitAttribute uniAttr;
+  MFnMatrixAttribute mAttr;
 
   // These would be inputs from the GUI
   glm::vec2 translation = glm::vec2(1, 4);
@@ -54,12 +71,7 @@ MStatus FlowFinityNode::initialize()
   glm::vec2 translation2 = glm::vec2(5, 6);
   glm::vec2 scale2 = glm::vec2(1, 2);
 
-  m_visibilityGraph.addCubeObstacle(translation, scale, 0.0f);
-  m_visibilityGraph.addCubeObstacle(translation2, scale2, 100.0f);
-
-  m_visibilityGraph.createGraph();
-
-  // --------- --------- --------- SETUP CROWDSIM CONFIG ATTRIBUTES --------- --------- ---------
+  // --------- --------- SETUP CROWDSIM CONFIG ATTRIBUTES --------- ---------
 
   agentMaxSpeed = nAttr.create("agentMaxSpeed", "ams", MFnNumericData::kDouble, 1.0, &stat);
   statCheck(stat, "failed to create agentMaxSpeed");
@@ -105,6 +117,28 @@ MStatus FlowFinityNode::initialize()
   nAttr.setStorable(true);
   nAttr.setKeyable(true);
 
+  obstacleTransforms = mAttr.create("obstacleTransforms", "ot", MFnMatrixAttribute::kDouble, &stat);
+  statCheck(stat, "failed to create obstacleTransforms");
+  mAttr.setArray(true);
+  mAttr.setUsesArrayDataBuilder(true);
+  mAttr.setWritable(true);
+
+  inOutFlows = mAttr.create("inOutFlows", "io", MFnMatrixAttribute::kDouble, &stat);
+  statCheck(stat, "failed to create inOutFlows");
+  mAttr.setArray(true);
+  mAttr.setUsesArrayDataBuilder(true);
+  mAttr.setWritable(true);
+
+  startTime = uniAttr.create("startTime", "st", MFnUnitAttribute::kTime, 0.0, &stat);
+  statCheck(stat, "failed to create startTime");
+  uniAttr.setWritable(true);
+  uniAttr.setStorable(true);
+
+  endTime = uniAttr.create("endTime", "et", MFnUnitAttribute::kTime, 240.0, &stat);
+  statCheck(stat, "failed to create endTime");
+  uniAttr.setWritable(true);
+  uniAttr.setStorable(true);
+
   addAttribute(agentMaxSpeed);
   addAttribute(agentAcceleration);
   addAttribute(agentDrag);
@@ -112,51 +146,53 @@ MStatus FlowFinityNode::initialize()
   addAttribute(agentAggressiveness);
   addAttribute(spawnRate);
   addAttribute(maxAgents);
+  addAttribute(obstacleTransforms);
+  addAttribute(inOutFlows);
+  addAttribute(startTime);
+  addAttribute(endTime);
 
-  // --------- --------- --------- SETUP FRAME/PARTICLE ATTRIBUTES --------- --------- ---------
+  // --------- --------- SETUP SIM CACHE ATTRIBUTES --------- ---------
 
-  startState = tAttr.create("startState", "sst", MFnData::kNObject, MObject::kNullObj, &stat);
-
-  statCheck(stat, "failed to create startState");
-  tAttr.setWritable(true);
+  simulationData = tAttr.create("simulationData", "sd", MFnData::kString, MObject::kNullObj, &stat);
+  statCheck(stat, "failed to create simulationData");
+  tAttr.setWritable(false);
   tAttr.setStorable(true);
-  // tAttr.setHidden(true);
-  tAttr.setArray(true);
+  tAttr.setHidden(true);
 
-  currentState = tAttr.create("currentState", "cst", MFnData::kNObject, MObject::kNullObj, &stat);
+  currentTime = uniAttr.create("currentTime", "ct", MFnUnitAttribute::kTime, 0.0, &stat);
+  statCheck(stat, "failed to create currentTime");
 
-  statCheck(stat, "failed to create currentState");
-  tAttr.setWritable(true);
-  tAttr.setStorable(true);
-  // tAttr.setHidden(true);
-  tAttr.setArray(true);
-
-  nextState = tAttr.create("nextState", "nst", MFnData::kNObject, MObject::kNullObj, &stat);
-
-  statCheck(stat, "failed to create nextState");
-  tAttr.setWritable(true);
-  tAttr.setStorable(true);
-  // tAttr.setHidden(true);
-  tAttr.setArray(true);
-
-  MFnUnitAttribute uniAttr;
-  currentTime = uniAttr.create("currentTime", "ctm", MFnUnitAttribute::kTime, 0.0, &stat);
-
-  addAttribute(startState);
-  addAttribute(currentState);
-  addAttribute(nextState);
+  addAttribute(simulationData);
   addAttribute(currentTime);
 
-  attributeAffects(agentMaxSpeed, nextState);
-  attributeAffects(agentAcceleration, nextState);
-  attributeAffects(agentDrag, nextState);
-  attributeAffects(agentRadius, nextState);
-  attributeAffects(agentAggressiveness, nextState);
-  attributeAffects(spawnRate, nextState);
-  attributeAffects(maxAgents, nextState);
-  attributeAffects(startState, nextState);
-  attributeAffects(currentState, nextState);
-  attributeAffects(currentTime, nextState);
+  // --------- --------- SETUP OUTPUT DATA ATTRIBUTE --------- ---------
+
+  outputPoints =
+      tAttr.create("outputPoints", "od", MFnData::kDynArrayAttrs, MObject::kNullObj, &stat);
+  statCheck(stat, "failed to create outputPoints");
+  tAttr.setWritable(false);
+  tAttr.setReadable(true);
+
+  addAttribute(outputPoints);
+
+  // --------- --------- SETUP ATTRIBUTE EFFECTS --------- ---------
+
+  // recompute sim when any of the following attributes change
+  attributeAffects(agentMaxSpeed, simulationData);
+  attributeAffects(agentAcceleration, simulationData);
+  attributeAffects(agentDrag, simulationData);
+  attributeAffects(agentRadius, simulationData);
+  attributeAffects(agentAggressiveness, simulationData);
+  attributeAffects(spawnRate, simulationData);
+  attributeAffects(maxAgents, simulationData);
+  attributeAffects(obstacleTransforms, simulationData);
+  attributeAffects(inOutFlows, simulationData);
+  attributeAffects(startTime, simulationData);
+  attributeAffects(endTime, simulationData);
+
+  // outputPoints just fetches a snapshot of simulationData
+  attributeAffects(simulationData, outputPoints);
+  attributeAffects(currentTime, outputPoints);
 
   return MStatus::kSuccess;
 }
@@ -164,48 +200,42 @@ MStatus FlowFinityNode::initialize()
 MStatus FlowFinityNode::compute(const MPlug& plug, MDataBlock& data)
 {
   MStatus stat;
-  if (plug == nextState) {
+  // Run through simulation if simulationData is dirty
+  if (plug == simulationData) {
 
-    // Get current time
-    MTime currTime = data.inputValue(currentTime).asTime();
-    MObject inputData;
+    // Get the start and end times
+    MDataHandle startTimeHandle = data.inputValue(startTime);
+    statCheck(stat, "failed to get startTimeHandle");
+    MDataHandle endTimeHandle = data.inputValue(endTime);
+    statCheck(stat, "failed to get endTimeHandle");
 
-    // Depending on the time, pull on start or current state
-
-    if (currTime.value() <= 0.0) {
-      MArrayDataHandle multiDataHandle = data.inputArrayValue(startState);
-      multiDataHandle.jumpToElement(0);
-      inputData = multiDataHandle.inputValue().data();
-    } else {
-      MArrayDataHandle multiDataHandle = data.inputArrayValue(currentState);
-      multiDataHandle.jumpToElement(0);
-      inputData = multiDataHandle.inputValue().data();
-    }
-
-    // Create a Crowd Sim Instance
-    CrowdSim crowdSim;
-    crowdSim.m_config.inOutFlows.push_back(std::make_pair(glm::vec2(-5, -5), glm::vec2(10, 10)));
+    // Get number of frames needed and deltaTime
+    MTime startTime = startTimeHandle.asTime();
+    MTime endTime = endTimeHandle.asTime();
+    int numFrames = (int)(endTime.value() - startTime.value());
+    float deltaTime = 1.f / 24.f;
 
     MDataHandle agentMaxSpeedHandle = data.inputValue(agentMaxSpeed);
     statCheck(stat, "failed to get agentMaxSpeedHandle");
-
     MDataHandle agentAccelerationHandle = data.inputValue(agentAcceleration);
     statCheck(stat, "failed to get agentAccelerationHandle");
-
     MDataHandle agentDragHandle = data.inputValue(agentDrag);
     statCheck(stat, "failed to get agentDragHandle");
-
     MDataHandle agentRadiusHandle = data.inputValue(agentRadius);
     statCheck(stat, "failed to get agentRadiusHandle");
-
     MDataHandle agentAggressivenessHandle = data.inputValue(agentAggressiveness);
     statCheck(stat, "failed to get agentAggressivenessHandle");
-
+    MArrayDataHandle obstacleTransformsHandle = data.inputValue(obstacleTransforms);
+    statCheck(stat, "failed to get obstacleTransformsHandle");
+    MArrayDataHandle inOutFlowsHandle = data.inputValue(inOutFlows);
+    statCheck(stat, "failed to get inOutFlowsHandle");
     MDataHandle spawnRateHandle = data.inputValue(spawnRate);
     statCheck(stat, "failed to get spawnRateHandle");
-
     MDataHandle maxAgentsHandle = data.inputValue(maxAgents);
     statCheck(stat, "failed to get maxAgentsHandle");
+
+    // Create a Crowd Sim instance for simulation
+    CrowdSim crowdSim;
 
     // Set config values from attributes
     crowdSim.m_config.maxSpeed = agentMaxSpeedHandle.asDouble();
@@ -216,67 +246,102 @@ MStatus FlowFinityNode::compute(const MPlug& plug, MDataBlock& data)
     crowdSim.m_config.spawnRate = spawnRateHandle.asDouble();
     crowdSim.m_config.maxAgents = maxAgentsHandle.asInt();
 
-    MFnNObjectData nData(inputData);
-    MnParticle* nObj = NULL;
-    nData.getObjectPtr(nObj);
+    // Read in/out flows from attributes
+    for (unsigned int i = 0; i < inOutFlowsHandle.elementCount(); i += 2) {
+      // get inflow transform
+      inOutFlowsHandle.jumpToElement(i);
+      MDataHandle inOutFlowHandle = inOutFlowsHandle.inputValue();
+      MMatrix inOutFlowMatrix = inOutFlowHandle.asMatrix();
+      MTransformationMatrix inFlowTrans(inOutFlowMatrix);
 
-    // Get the particle positions
-    MFloatPointArray points;
-    nObj->getPositions(points);
+      // get outflow transform
+      inOutFlowsHandle.jumpToElement(i + 1);
+      inOutFlowHandle = inOutFlowsHandle.inputValue();
+      inOutFlowMatrix = inOutFlowHandle.asMatrix();
+      MTransformationMatrix outFlowTrans(inOutFlowMatrix);
 
-    // Get the particle velocities
-    MFloatPointArray velocities;
-    nObj->getVelocities(velocities);
-
-    // Import the agents into the crowd sim
-    std::vector<glm::vec2> pos;
-    std::vector<glm::vec2> vel;
-    for (unsigned int ii = 0; ii < points.length(); ii++) {
-      pos.push_back(glm::vec2(points[ii].x, points[ii].z));
-      vel.push_back(glm::vec2(velocities[ii].x, velocities[ii].z));
-    }
-    crowdSim.importAgents(pos, vel);
-
-    // unsigned int ii;
-    // for (ii = 0; ii < points.length(); ii++) {
-    //   points[ii].y = (float)sin(points[ii].x + currTime.value() * 4.0f * (3.1415f / 180.0f));
-    // }
-
-    // Perform a time step
-    crowdSim.unfastComputeAllTargetsFromFirstInOutFlow(&m_visibilityGraph);
-    auto x = std::string();
-    x += "\nfinal target x: " + std::to_string(crowdSim.getAgentFinalTargets().at(0).x);
-    x += "\nfinal target y: " + std::to_string(crowdSim.getAgentFinalTargets().at(0).y);
-    x += "\n\ncurrent target x: " + std::to_string(crowdSim.getAgentCurrentTargets().at(0).x);
-    x += "\ncurrent target y: " + std::to_string(crowdSim.getAgentCurrentTargets().at(0).y);
-    MGlobal::displayInfo(x.c_str());
-    crowdSim.performTimeStep(0.1f);
-
-    // Get the new positions
-    pos = crowdSim.getAgentPositions();
-    vel = crowdSim.getAgentVelocities();
-    for (unsigned int ii = 0; ii < points.length(); ii++) {
-      points[ii].x = pos[ii].x;
-      points[ii].z = pos[ii].y;
-      velocities[ii].x = vel[ii].x;
-      velocities[ii].z = vel[ii].y;
+      crowdSim.m_config.inOutFlows.push_back(
+          std::make_pair(glm::vec2(inFlowTrans.getTranslation(MSpace::kWorld).x,
+                                   inFlowTrans.getTranslation(MSpace::kWorld).z),
+                         glm::vec2(outFlowTrans.getTranslation(MSpace::kWorld).x,
+                                   outFlowTrans.getTranslation(MSpace::kWorld).z)));
     }
 
-    nObj->setPositions(points);
-    nObj->setVelocities(velocities);
+    // Create visgraph
+    VisibilityGraph visGraph;
 
-    delete nObj;
+    // Read obstacles from attributes
+    for (unsigned int i = 0; i < obstacleTransformsHandle.elementCount(); i++) {
+      obstacleTransformsHandle.jumpToElement(i);
+      MDataHandle obstacleTransformHandle = obstacleTransformsHandle.inputValue();
+      MMatrix obstacleTransformMatrix = obstacleTransformHandle.asMatrix();
+      MTransformationMatrix obstacleTrans(obstacleTransformMatrix);
+
+      MVector translation = obstacleTrans.getTranslation(MSpace::kWorld);
+      double scale[3];
+      obstacleTrans.getScale(scale, MSpace::kWorld);
+      auto rotation = obstacleTrans.eulerRotation();
+
+      visGraph.addCubeObstacle(glm::vec2(translation.x, translation.z),
+                               glm::vec2(scale[0], scale[2]), rotation.y);
+    }
+
+    // Run sim and encode the data in a string!
+    auto encodedSim = FFEncoding::encodeSimulation(crowdSim, numFrames, deltaTime, visGraph);
+
+    // Save string into simulationData attribute
+    MDataHandle simDataHandle = data.outputValue(simulationData, &stat);
+    statCheck(stat, "failed to get simDataHandle");
+    simDataHandle.set(MFnStringData().create(encodedSim.c_str()));
+
     data.setClean(plug);
+
+    return stat;
   }
 
-  else if (plug == currentState) {
-    data.setClean(plug);
-  }
+  // If outputPoints is dirty, just fetch from simulationData
+  if (plug == outputPoints) {
 
-  else if (plug == startState) {
+    // Get attribute handles
+
+    MDataHandle startTimeHandle = data.inputValue(startTime, &stat);
+    statCheck(stat, "failed to get startTimeHandle");
+    MDataHandle currentTimeHandle = data.inputValue(currentTime, &stat);
+    statCheck(stat, "failed to get currentTimeHandle");
+    MDataHandle simDataHandle = data.inputValue(simulationData, &stat);
+    statCheck(stat, "failed to get simDataHandle");
+    MDataHandle outputPointsHandle = data.outputValue(outputPoints, &stat);
+    statCheck(stat, "failed to get outputPointsHandle");
+
+    // Get current time
+    MTime currTime = data.inputValue(currentTime).asTime();
+
+    // Read sim data from simulationData attribute and decode it
+    auto encodedSim = std::string(simDataHandle.asString().asChar());
+    auto simulation = FFEncoding::decodeSimulation(encodedSim);
+
+    // Create a new nObjectData to store the output points
+    // https://help.autodesk.com/cloudhelp/2023/ENU/Maya-Tech-Docs/Nodes/instancer.html#attrinputPoints
+    MFnArrayAttrsData nObjData;
+    auto nObj = nObjData.create();
+
+    auto frame = simulation.at(currTime.value() - startTimeHandle.asTime().value());
+
+    auto posArray = nObjData.vectorArray("position");
+    auto rotArray = nObjData.vectorArray("aimDirection");
+    auto rotType = nObjData.intArray("rotationType");
+    // TODO: maybe we need ID array?
+
+    for (const auto& agent : frame) {
+      posArray.append(MVector(agent.first.x, 0, agent.first.y));
+      rotArray.append(MVector(agent.second.x, 0, agent.second.y));
+      rotType.append(1);
+    }
+
+    // Send nObjectData to the outputPoints attribute
+    outputPointsHandle.setMObject(nObj);
+
     data.setClean(plug);
-  } else {
-    stat = MS::kUnknownParameter;
   }
 
   return MS::kSuccess;
