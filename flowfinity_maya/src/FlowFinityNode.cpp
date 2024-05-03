@@ -65,10 +65,10 @@ MStatus FlowFinityNode::initialize()
   MFnMatrixAttribute mAttr;
 
   // These would be inputs from the GUI
-  glm::vec2 translation = glm::vec2(1, 4);
-  glm::vec2 scale = glm::vec2(2, 1);
+  glm::vec2 translation = glm::vec2(3, 3);
+  glm::vec2 scale = glm::vec2(2, 2);
 
-  glm::vec2 translation2 = glm::vec2(5, 6);
+  glm::vec2 translation2 = glm::vec2(7, 7);
   glm::vec2 scale2 = glm::vec2(1, 2);
 
   // --------- --------- SETUP CROWDSIM CONFIG ATTRIBUTES --------- ---------
