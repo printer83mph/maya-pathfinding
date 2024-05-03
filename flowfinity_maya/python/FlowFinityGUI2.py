@@ -10,6 +10,7 @@ import maya.cmds as cmds
 
 import random
 
+
 # Class to create the main dialog window for the FlowFinity Crowd Simulation tool
 class FlowFinityGUI(QtWidgets.QDialog):
 
@@ -303,8 +304,10 @@ class FlowFinityGUI(QtWidgets.QDialog):
             print(f"Translation of {self.instanced_mesh.fullPath}: {translation}")
             for obstacle in self.obstacles:
                 mesh_transform = cmds.listRelatives(obstacle.fullPath, parent=True)[0]
-                translation = cmds.xform(mesh_transform, query=True, translation=True)
-                print(f"Translation of {obstacle}: {translation}")
+                matrix = cmds.xform(
+                    mesh_transform, query=True, matrix=True, worldSpace=True
+                )
+                print(f"Translation of {obstacle}: {matrix}")
 
     def create_flowfinity(self):
         # Create a new node called "flowfinity"
@@ -331,14 +334,21 @@ class FlowFinityGUI(QtWidgets.QDialog):
         # Future Connections
 
         # Connect the obstacle meshes to the flowfinity node
-        for index, transform_node in enumerate(self.obstacles):
+        for index, obstacle in enumerate(self.obstacles):
+            transform_node = cmds.listRelatives(
+                obstacle.fullPath, parent=True, fullPath=True
+            )[0]
             cmds.connectAttr(
                 str(transform_node) + ".worldMatrix[0]",
                 str(flowfinity_node) + ".obstacleTransforms[{}]".format(index),
+                force=True,
             )
 
         # Connect the path locators transforms to the flowfinity node
         for index, path in enumerate(self.path_list_widget):
+            transform_node = cmds.listRelatives(
+                path.fullPath, parent=True, fullPath=True
+            )[0]
             cmds.connectAttr(
                 str(path) + ".worldMatrix[0]",
                 str(flowfinity_node) + ".inOutFlows[{}]".format(index),
@@ -366,6 +376,13 @@ class FlowFinityGUI(QtWidgets.QDialog):
         cmds.setAttr(
             str(flowfinity_node) + ".agentAggressiveness", self.agent_aggression.value()
         )
+
+        # Connect the instancer
+        instancer = cmds.createNode("instancer")
+        cmds.connectAttr(
+            str(flowfinity_node) + ".outputPoints", instancer + ".inputPoints"
+        )
+        cmds.connectAttr(self.instanced_mesh.fullPath + '.outMesh', instancer + '.inputHierarchy', force=True)
 
 
 if __name__ == "__main__":
