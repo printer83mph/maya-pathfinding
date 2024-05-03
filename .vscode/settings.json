@@ -5,4 +5,5 @@
     "--compile-commands-dir=build_debug"
   ],
   "cmake.configureOnEdit": false,
+  "python.analysis.typeCheckingMode": "off",
 }

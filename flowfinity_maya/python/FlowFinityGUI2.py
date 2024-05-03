@@ -38,6 +38,7 @@ class FlowFinityGUI(QtWidgets.QDialog):
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
         self.instanced_mesh = None
         self.obstacles = []
+        self.paths = []
         self.create_widgets()
         self.create_layout()
         self.create_connections()
@@ -264,6 +265,7 @@ class FlowFinityGUI(QtWidgets.QDialog):
                 for i in range(self.path_list_widget.count())
             ]:
                 self.path_list_widget.addItem(path)
+                
 
     # Removes the selected path from the path list widget
     def remove_path(self):
@@ -291,44 +293,12 @@ class FlowFinityGUI(QtWidgets.QDialog):
 
     def run_flowfinity(self):
         print("TODO: Implement run_flowfinity")
-        if self.instanced_mesh is None:
-            QtWidgets.QMessageBox.warning(
-                self, "Warning", "Please select an instanced mesh."
-            )
-            return
-        else:
-            mesh_transform = cmds.listRelatives(
-                self.instanced_mesh.fullPath, parent=True
-            )[0]
-            translation = cmds.xform(mesh_transform, query=True, translation=True)
-            print(f"Translation of {self.instanced_mesh.fullPath}: {translation}")
-            for obstacle in self.obstacles:
-                mesh_transform = cmds.listRelatives(obstacle.fullPath, parent=True)[0]
-                matrix = cmds.xform(
-                    mesh_transform, query=True, matrix=True, worldSpace=True
-                )
-                print(f"Translation of {obstacle}: {matrix}")
 
     def create_flowfinity(self):
         # Create a new node called "flowfinity"
 
         flowfinity_node = cmds.createNode("FlowFinityNode")
 
-        # cmds.disconnectAttr("nParticleShape1.currentState", "nucleus1.inputActive[0]")
-        # cmds.disconnectAttr(
-        #     "nParticleShape1.startState", "nucleus1.inputActiveStart[0]"
-        # )
-        # cmds.disconnectAttr("nucleus1.outputObjects[0]", "nParticleShape1.nextState")
-
-        # cmds.connectAttr(
-        #     str(flowfinity_node) + ".nextState[0]", "nParticleShape1.nextState"
-        # )
-        # cmds.connectAttr(
-        #     "nParticleShape1.currentState", str(flowfinity_node) + ".currentState[0]"
-        # )
-        # cmds.connectAttr(
-        #     "nParticleShape1.startState", str(flowfinity_node) + ".startState[0]"
-        # )
         cmds.connectAttr("time1.outTime", str(flowfinity_node) + ".currentTime")
 
         # Future Connections
@@ -345,7 +315,7 @@ class FlowFinityGUI(QtWidgets.QDialog):
             )
 
         # Connect the path locators transforms to the flowfinity node
-        for index, path in enumerate(self.path_list_widget):
+        for index, path in enumerate(self.paths):
             transform_node = cmds.listRelatives(
                 path.fullPath, parent=True, fullPath=True
             )[0]
