@@ -59,7 +59,7 @@ class SearchNavMeshDialog(QtWidgets.QDialog):
         self.close()
         self.parent().search_bar.setText(item.text())
         self.parent().instanced_mesh = MeshItem(
-            item.text(), cmds.ls(item.text(), long=True)[0]
+            item.text(), cmds.listRelatives(item.text(), parent=True)[0]
         )
 
 
@@ -112,12 +112,8 @@ class LocatorSelectionDialog(QtWidgets.QDialog):
                 cmds.ls(selected_items[1].text(), long=True)[0],
             )
             self.path_items.append(mesh2)
-            print(self.path_items[0])
-            print(self.path_items[1])
-            print("test1")
             self.accept()
         else:
-            print("test2")
             QtWidgets.QMessageBox.warning(
                 self, "Warning", "Please select exactly two locators."
             )

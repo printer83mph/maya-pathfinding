@@ -36,19 +36,5 @@ MStatus FlowFinityCmd::doIt(const MArgList& args)
   MGlobal::executePythonCommand(python_GuiScript1);
   MGlobal::executePythonCommand(python_GuiScript2);
 
-  // All testing stuff : comment this and replace with running GUI with python script
-  // Get the selected objects
-  MSelectionList selection;
-  MGlobal::getActiveSelectionList(selection);
-
-  // Check if the selected object is an MnParticle
-  MObject selectedObject;
-  selection.getDependNode(0, selectedObject);
-  if (selectedObject.hasFn(MFn::kNParticle)) {
-    MGlobal::displayInfo("Selected");
-  } else {
-    MGlobal::displayInfo(selectedObject.apiTypeStr());
-  }
-
   return MStatus::kSuccess;
 }

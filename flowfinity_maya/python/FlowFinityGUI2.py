@@ -254,7 +254,6 @@ class FlowFinityGUI(QtWidgets.QDialog):
 
     # Adds a path to the path list widget as a string of the form "start_locator -> end_locator" if it is not already present
     def add_path(self):
-        print("test2")
         dialog = LocatorSelectionDialog(self)
         if dialog.exec_():
             selected_items = dialog.locator_list.selectedItems()
@@ -266,7 +265,6 @@ class FlowFinityGUI(QtWidgets.QDialog):
                 for i in range(self.path_list_widget.count())
             ]:
                 self.path_list_widget.addItem(path)
-                print(dialog.path_items[0])
                 self.paths.append(dialog.path_items[0])
                 self.paths.append(dialog.path_items[1])
 
@@ -299,11 +297,7 @@ class FlowFinityGUI(QtWidgets.QDialog):
 
     def create_flowfinity(self):
         # Create a new node called "flowfinity"
-        print("testing pleaseeee1")
-        print(self.paths)
-        print(self.paths[0].fullPath)
-        print(instanced_mesh.fullPath)
-        print("testing pleaseeee")
+        print("starting to create flowfinity node")
 
         flowfinity_node = cmds.createNode("FlowFinityNode")
 
@@ -322,17 +316,15 @@ class FlowFinityGUI(QtWidgets.QDialog):
                 force=True,
             )
 
-        # Connect the path locators transforms to the flowfinity node
-        print(cmds.listRelatives(self.paths[0].fullPath, parent=True, fullPath=True)[0])
+        print("Connected obstacle meshes")
+        print(len(self.paths))
         for index, path in enumerate(self.paths):
-            transform_node = cmds.listRelatives(
-                path.fullPath, parent=True, fullPath=True
-            )[0]
+            print(index, path.fullPath, path.name)
             cmds.connectAttr(
-                str(path) + ".worldMatrix[0]",
+                str(path.fullPath) + ".worldMatrix[0]",
                 str(flowfinity_node) + ".inOutFlows[{}]".format(index),
             )
-
+        print("Connected paths")
         # Connect the start and end times
         cmds.setAttr(
             str(flowfinity_node) + ".startTime", self.simulation_start_time.value()
@@ -362,8 +354,8 @@ class FlowFinityGUI(QtWidgets.QDialog):
             str(flowfinity_node) + ".outputPoints", instancer + ".inputPoints"
         )
         cmds.connectAttr(
-            self.instanced_mesh.fullPath + ".outMesh",
-            instancer + ".inputHierarchy",
+            self.instanced_mesh.fullPath + ".matrix",
+            instancer + ".inputHierarchy[0]",
             force=True,
         )
 
