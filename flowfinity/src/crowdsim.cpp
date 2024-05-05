@@ -83,7 +83,6 @@ void CrowdSim::performTimeStep(float dt)
     m_rvoVel[i] += accel * dt;
     m_rvoPos[i] += m_rvoVel[i] * dt;
 
-#if 0
     // if colliding, bump out
     for (int j = 0; j < m_rvoPos.size(); ++j) {
       if (i == j)
@@ -94,7 +93,6 @@ void CrowdSim::performTimeStep(float dt)
         m_rvoPos[i] += dirFromOther * (m_config.radius * 2.f - dist);
       }
     }
-#endif
   }
 }
 
@@ -103,7 +101,7 @@ void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
   // spawn agents
 #ifndef BETA
   if (m_config.inOutFlows.size() > 0 && size() < m_config.maxAgents) {
-    if ((float)std::rand() / (float)RAND_MAX < dt * 0.5f) {
+    if ((float)std::rand() / (float)RAND_MAX < dt * m_config.spawnRate) {
       // pick random inOutFlow pair
       int inOutFlowIdx =
           glm::floor((float)std::rand() / (float)RAND_MAX * m_config.inOutFlows.size());
@@ -194,7 +192,7 @@ void CrowdSim::computeCurrentTarget(int index, NavMethod* navMethod)
   m_rvoCurrentTarget[index] = path.at(currentTargetIndex);
 }
 
-#define BETA
+// #define BETA
 glm::vec2 CrowdSim::findOptimalAcceleration(int index, float dt) const
 {
   auto& posA = m_rvoPos[index];
