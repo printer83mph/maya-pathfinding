@@ -1,6 +1,7 @@
 #include "flowfinity/crowdsim.h"
 
 #include "flowfinity/navigation/navmethod.h"
+#include "flowfinity/rvo.h"
 
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
@@ -97,7 +98,6 @@ void CrowdSim::performTimeStep(float dt)
   }
 }
 
-#define BETA
 void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
 {
   // spawn agents
@@ -194,6 +194,7 @@ void CrowdSim::computeCurrentTarget(int index, NavMethod* navMethod)
   m_rvoCurrentTarget[index] = path.at(currentTargetIndex);
 }
 
+#define BETA
 glm::vec2 CrowdSim::findOptimalAcceleration(int index, float dt) const
 {
   auto& posA = m_rvoPos[index];

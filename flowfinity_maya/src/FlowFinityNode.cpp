@@ -3,6 +3,7 @@
 #include "flowfinity/encoding.h"
 #include "flowfinity/navigation/visibilitygraph.h"
 
+#include <glm/trigonometric.hpp>
 #include <maya/MApiNamespace.h>
 #include <maya/MArrayDataHandle.h>
 #include <maya/MDataHandle.h>
@@ -259,23 +260,10 @@ MStatus FlowFinityNode::compute(const MPlug& plug, MDataBlock& data)
       inOutFlowMatrix = inOutFlowHandle.asMatrix();
       MTransformationMatrix outFlowTrans(inOutFlowMatrix);
 
-      // MGlobal::displayInfo(
-      //     MString("Inflow Position: ") +
-      //     MString(std::to_string(inFlowTrans.getTranslation(MSpace::kWorld).x).c_str()) +
-      //     MString(", ") +
-      //     MString(std::to_string(inFlowTrans.getTranslation(MSpace::kWorld).z).c_str()));
-
-      // MGlobal::displayInfo(
-      //     MString("Outflow Position: ") +
-      //     MString(std::to_string(outFlowTrans.getTranslation(MSpace::kWorld).x).c_str()) +
-      //     MString(", ") +
-      //     MString(std::to_string(outFlowTrans.getTranslation(MSpace::kWorld).z).c_str()));
-
-      crowdSim.m_config.inOutFlows.push_back(
-          std::make_pair(glm::vec2(inFlowTrans.getTranslation(MSpace::kWorld).x,
-                                   inFlowTrans.getTranslation(MSpace::kWorld).z),
-                         glm::vec2(outFlowTrans.getTranslation(MSpace::kWorld).x,
-                                   outFlowTrans.getTranslation(MSpace::kWorld).z)));
+      crowdSim.m_config.inOutFlows.push_back({{inFlowTrans.getTranslation(MSpace::kWorld).x,
+                                               inFlowTrans.getTranslation(MSpace::kWorld).z},
+                                              {outFlowTrans.getTranslation(MSpace::kWorld).x,
+                                               outFlowTrans.getTranslation(MSpace::kWorld).z}});
     }
 
     // Create visgraph
@@ -293,20 +281,8 @@ MStatus FlowFinityNode::compute(const MPlug& plug, MDataBlock& data)
       obstacleTrans.getScale(scale, MSpace::kWorld);
       auto rotation = obstacleTrans.eulerRotation();
 
-      // // Display translation, scale, and rotation
-      // MGlobal::displayInfo(MString("Translation: ") +
-      //                      MString(std::to_string(translation[0]).c_str()) + MString(", ") +
-      //                      MString(std::to_string(translation[1]).c_str()) + MString(", ") +
-      //                      MString(std::to_string(translation[2]).c_str()));
-      // MGlobal::displayInfo(MString("Scale: ") + MString(std::to_string(scale[0]).c_str()) +
-      //                      MString(", ") + MString(std::to_string(scale[1]).c_str()) +
-      //                      MString(", ") + MString(std::to_string(scale[2]).c_str()));
-      // MGlobal::displayInfo(MString("Rotation: ") + MString(std::to_string(rotation.x).c_str()) +
-      //                      MString(", ") + MString(std::to_string(rotation.y).c_str()) +
-      //                      MString(", ") + MString(std::to_string(rotation.z).c_str()));
-
       visGraph.addCubeObstacle(glm::vec2(translation.x, translation.z),
-                               glm::vec2(scale[0], scale[2]), rotation.y);
+                               glm::vec2(scale[0] * 0.5, scale[2] * 0.5), glm::degrees(rotation.y));
     }
 
     // Run sim and encode the data in a string!
@@ -316,6 +292,8 @@ MStatus FlowFinityNode::compute(const MPlug& plug, MDataBlock& data)
     statCheck(stat, "failed to get simDataHandle");
     simDataHandle.set(MFnStringData().create(encodedSim.c_str()));
 
+    // MGlobal::displayInfo(MString("Simulation Data: ") + MString(encodedSim.c_str()));
+
     data.setClean(plug);
 
     return stat;
@@ -323,8 +301,8 @@ MStatus FlowFinityNode::compute(const MPlug& plug, MDataBlock& data)
 
   // If outputPoints is dirty, just fetch from simulationData
   if (plug == outputPoints) {
-    // Get attribute handles
 
+    // Get attribute handles
     MDataHandle startTimeHandle = data.inputValue(startTime, &stat);
     statCheck(stat, "failed to get startTimeHandle");
     MDataHandle currentTimeHandle = data.inputValue(currentTime, &stat);
@@ -339,6 +317,8 @@ MStatus FlowFinityNode::compute(const MPlug& plug, MDataBlock& data)
 
     // Read sim data from simulationData attribute and decode it
     auto encodedSim = std::string(simDataHandle.asString().asChar());
+
+    // MGlobal::displayInfo("Decoding sim...");
     auto simulation = FFEncoding::decodeSimulation(encodedSim);
 
     // Create a new nObjectData to store the output points
@@ -346,39 +326,26 @@ MStatus FlowFinityNode::compute(const MPlug& plug, MDataBlock& data)
     MFnArrayAttrsData nObjData;
     auto nObj = nObjData.create();
 
-    // auto frame = simulation.at(currTime.value() - startTimeHandle.asTime().value());
-    MGlobal::displayInfo(MString("Sim Size:") + std::to_string(simulation.size()).c_str());
+    // MGlobal::displayInfo(MString("Sim Size:") + std::to_string(simulation.size()).c_str());
+
+    auto frame = simulation.at(currTime.value() - startTimeHandle.asTime().value());
 
     auto posArray = nObjData.vectorArray("position");
-    auto idArray = nObjData.intArray("id");
     auto rotArray = nObjData.vectorArray("aimDirection");
-    //  Don't think we need rotType array
+    auto rotTypeArray = nObjData.intArray("rotType");
+    auto idArray = nObjData.intArray("id");
 
     int id = -1;
-    // for (const auto& agent : frame) {
-    for (int i = 0; i < 10; i++) {
-      float randomValue1 =
-          1.0 + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (10.0 - 1.0)));
-      float randomValue2 =
-          1.0 + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (10.0 - 1.0)));
-      float randomValue3 =
-          1.0 + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (10.0 - 1.0)));
-      // posArray.append(MVector(agent.first.x, 0, agent.first.y));
-      posArray.append(MVector(randomValue1, randomValue2, randomValue3));
-      MGlobal::displayInfo(MString("Agent position: ") +
-                           MString(std::to_string(posArray[id + 1].x).c_str()) + MString(", ") +
-                           MString(std::to_string(posArray[id + 1].y).c_str()) + MString(", ") +
-                           MString(std::to_string(posArray[id + 1].z).c_str()));
-      // rotArray.append(MVector(agent.second.x, 0, agent.second.y));
-
-      float randomRot1 =
-          -1.0 + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (1.0 - (-1.0))));
-      float randomRot2 =
-          -1.0 + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (1.0 - (-1.0))));
-      float randomRot3 =
-          -1.0 + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (1.0 - (-1.0))));
-      rotArray.append(MVector(randomRot1, randomRot2, randomRot3));
+    for (const auto& agent : frame) {
+      posArray.append(MVector(agent.first.x, 0, agent.first.y));
+      rotArray.append(MVector(agent.second.x, 0, agent.second.y));
+      rotTypeArray.append(1);
       idArray.append(id++);
+
+      // MGlobal::displayInfo(MString("Agent position: ") +
+      //                      MString(std::to_string(posArray[id + 1].x).c_str()) + MString(", ") +
+      //                      MString(std::to_string(posArray[id + 1].y).c_str()) + MString(", ") +
+      //                      MString(std::to_string(posArray[id + 1].z).c_str()));
     }
 
     // Send nObjectData to the outputPoints attribute

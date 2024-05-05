@@ -26,40 +26,27 @@ FFEncoding::decodeSimulation(const std::string& simulationData)
   std::vector<std::vector<std::pair<glm::vec2, glm::vec2>>> result;
 
   // split by newline (frame)
-  std::istringstream frameStream(simulationData);
-  std::string frame;
-  while (std::getline(frameStream, frame, '\n')) {
-    if (frame.empty())
-      continue;
-
-    std::vector<std::pair<glm::vec2, glm::vec2>> agents;
-
-    // split by semicolon (agent)
-    std::istringstream tokenStream(simulationData);
-    std::string token;
-    while (std::getline(tokenStream, token, ';')) {
-      if (token.empty())
-        continue;
-
-      std::vector<float> agentData;
-
-      // split by comma
-      std::istringstream agentStream(token);
-      std::string agentToken;
-      while (std::getline(agentStream, agentToken, ',')) {
-        agentData.push_back(std::stof(agentToken));
+  std::istringstream iss(simulationData);
+  std::string line;
+  while (std::getline(iss, line)) {
+    std::vector<std::pair<glm::vec2, glm::vec2>> frame;
+    // split by ;
+    std::istringstream iss2(line);
+    std::string agentData;
+    while (std::getline(iss2, agentData, ';')) {
+      // split by ,
+      std::istringstream iss3(agentData);
+      std::string token;
+      std::vector<std::string> tokens;
+      while (std::getline(iss3, token, ',')) {
+        tokens.push_back(token);
       }
-
-      // make sure we have all the data we need
-      if (agentData.size() != 4) {
-        throw "Invalid agent data";
+      if (tokens.size() == 4) {
+        frame.push_back({{std::stof(tokens[0]), std::stof(tokens[1])},
+                         {std::stof(tokens[2]), std::stof(tokens[3])}});
       }
-
-      agents.push_back(
-          {glm::vec2(agentData[0], agentData[1]), glm::vec2(agentData[2], agentData[3])});
     }
-
-    result.push_back(agents);
+    result.push_back(frame);
   }
 
   return result;

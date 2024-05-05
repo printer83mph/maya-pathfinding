@@ -34,3 +34,13 @@ target_include_directories(flowfinity PRIVATE
 target_link_libraries(flowfinity PUBLIC
 	glm::glm
 )
+
+add_executable(flowfinityTest)
+target_sources(flowfinityTest PRIVATE
+  test/main.cpp
+)
+# target_include_directories(flowfinityTest PRIVATE
+#   include
+#   ${GLM_INCLUDE_DIRS}
+# )
+target_link_libraries(flowfinityTest PRIVATE flowfinity)
