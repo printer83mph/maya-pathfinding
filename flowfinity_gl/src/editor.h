@@ -35,6 +35,7 @@ public:
   void createGraph();
   void getDisjkstraPath(std::vector<std::pair<glm::vec3, glm::vec3>> endPoints);
   void clearObstacles();
+  void loadTestScene();
 
 private:
   SDL_Window* mp_window;

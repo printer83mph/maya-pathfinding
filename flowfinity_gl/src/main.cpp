@@ -208,6 +208,9 @@ int main(int, char**)
       static float path1start[2] = {0.0f, 0.0f};
       static float path1end[2] = {0.0f, 0.0f};
 
+      static float path2start[2] = {0.0f, 0.0f};
+      static float path2end[2] = {0.0f, 0.0f};
+
       ImGui::Begin("Add Obstacles!"); // Create a window called "Hello, world!"
                                       // and append into it.
 
@@ -232,12 +235,23 @@ int main(int, char**)
                                          // widgets return true when edited/activated)
         editor.createGraph();
 
+      ImGui::SameLine();
+      if (ImGui::Button("Load Test Scene")) // Buttons return true when clicked (most
+                                            // widgets return true when edited/activated)
+        editor.loadTestScene();
+
       ImGui::Spacing();
       ImGui::Text("Add the endpoints of the path you want to find and click Find Path");
       ImGui::Spacing();
       {
         ImGui::InputFloat2(("Start #" + std::to_string(1)).c_str(), path1start);
         ImGui::InputFloat2(("End #" + std::to_string(1)).c_str(), path1end);
+        ImGui::Spacing();
+      }
+
+      {
+        ImGui::InputFloat2(("Start #" + std::to_string(2)).c_str(), path2start);
+        ImGui::InputFloat2(("End #" + std::to_string(2)).c_str(), path2end);
         ImGui::Spacing();
       }
 
@@ -256,6 +270,8 @@ int main(int, char**)
         std::vector<std::pair<glm::vec3, glm::vec3>> endPoints;
         endPoints.push_back(
             {glm::vec3(path1start[0], 0, path1start[1]), glm::vec3(path1end[0], 0, path1end[1])});
+        endPoints.push_back(
+            {glm::vec3(path2start[0], 0, path2start[1]), glm::vec3(path2end[0], 0, path2end[1])});
         editor.getDisjkstraPath(endPoints);
       }
 

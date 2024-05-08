@@ -282,7 +282,8 @@ MStatus FlowFinityNode::compute(const MPlug& plug, MDataBlock& data)
       auto rotation = obstacleTrans.eulerRotation();
 
       visGraph.addCubeObstacle(glm::vec2(translation.x, translation.z),
-                               glm::vec2(scale[0] * 0.5, scale[2] * 0.5), glm::degrees(rotation.y));
+                               glm::vec2(scale[0] * 0.5 * 1.2, scale[2] * 0.5 * 1.2),
+                               glm::degrees(rotation.y), crowdSim.m_config.radius);
     }
 
     // Run sim and encode the data in a string!

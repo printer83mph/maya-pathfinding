@@ -19,7 +19,8 @@ public:
   VisibilityGraph();
   virtual ~VisibilityGraph();
 
-  void addCubeObstacle(const glm::vec2& translation, const glm::vec2& scale, float rotation);
+  void addCubeObstacle(const glm::vec2& translation, const glm::vec2& scale, float rotation,
+                       float radius = 0.25f);
   void clearObstacles();
   void clearEndPoints();
 
@@ -41,6 +42,7 @@ private:
   std::vector<std::pair<glm::vec2, glm::vec2>> edges;
   std::vector<int> m_waypoints;
   std::vector<std::pair<int, int>> m_endPoints;
+  std::vector<std::vector<glm::vec3>> m_paths;
 
   bool m_graphCreated;
 
@@ -51,7 +53,6 @@ private:
 
   void getDisjkstraPaths(const std::vector<std::pair<glm::vec3, glm::vec3>>& endpoints,
                          std::vector<std::vector<glm::vec3>>& outPaths);
-  std::vector<std::vector<glm::vec3>> m_paths;
 
   static int minDistance(int dist[], bool sptSet[], int V);
 };

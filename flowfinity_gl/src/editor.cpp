@@ -40,6 +40,23 @@ void Editor::addCubeObstacle(glm::vec2 translation, glm::vec2 scale, float rotat
   m_visgraph.addCubeObstacle(translation, scale, rotation);
 }
 
+void Editor::loadTestScene()
+{
+  clearObstacles();
+  // Clear paths
+  m_paths.clear();
+  m_pathDisplay.clear();
+  m_drawPath = false;
+  m_flowFinity.m_config.inOutFlows.clear();
+
+  addCubeObstacle(glm::vec2(0, 0), glm::vec2(3, 2), 63);
+  addCubeObstacle(glm::vec2(-7, -8), glm::vec2(3, 2), 215);
+  addCubeObstacle(glm::vec2(-4, -4), glm::vec2(1, 2), 157);
+  addCubeObstacle(glm::vec2(6, 6), glm::vec2(4, 2), 172);
+  addCubeObstacle(glm::vec2(-6, 6), glm::vec2(1, 3), 97);
+  addCubeObstacle(glm::vec2(6, -5), glm::vec2(2, 5), 58);
+}
+
 void Editor::clearObstacles()
 {
   m_visgraph.clearObstacles();
@@ -63,6 +80,7 @@ void Editor::createGraph()
 {
   m_paths.clear();
   m_pathDisplay.clear();
+  m_drawPath = false;
   m_visgraph.createGraph();
   m_graphCreated = true;
 }
@@ -86,6 +104,9 @@ void Editor::getDisjkstraPath(std::vector<std::pair<glm::vec3, glm::vec3>> endpo
       path_vec3.push_back({point.x, 0, point.y});
     }
     m_paths.push_back(path_vec3);
+    glm::vec3 first = {inOutPair.first.x, 0, inOutPair.first.z};
+    glm::vec3 second = {inOutPair.second.x, 0, inOutPair.second.z};
+    m_flowFinity.m_config.inOutFlows.push_back({{first.x, first.z}, {second.x, second.z}});
   }
 
   std::vector<glm::vec3> colors = {glm::vec3(1, 1, 1), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)};
@@ -205,7 +226,7 @@ void Editor::paint()
   glColor4f(0, 1, 0, 1);
   glEnd();
 
-  if (m_graphCreated) {
+  if (m_graphCreated && !m_drawPath) {
     glBegin(GL_LINES);
     for (auto& edge : m_visgraph.getEdges()) {
       glColor3f(0, 1, 0);
@@ -213,6 +234,7 @@ void Editor::paint()
       glVertex3f(edge.second.x, 0, edge.second.y);
     }
     glEnd();
+    // update(0.01f);
   }
 
   if (m_drawPath) {

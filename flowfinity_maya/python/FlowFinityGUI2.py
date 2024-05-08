@@ -293,7 +293,12 @@ class FlowFinityGUI(QtWidgets.QDialog):
             self.mesh_list_widget.takeItem(self.mesh_list_widget.row(item))
 
     def run_flowfinity(self):
-        print("TODO: Implement run_flowfinity")
+        # Delete the existing flowfinity node if it exists
+        if cmds.objExists("FlowfinityNode1"):
+            cmds.delete("FlowfinityNode1")
+        if cmds.objExists("instancer1"):
+            cmds.delete("instancer1")
+        self.create_flowfinity()
 
     def create_flowfinity(self):
         # Create a new node called "flowfinity"
