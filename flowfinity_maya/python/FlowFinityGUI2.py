@@ -39,6 +39,8 @@ class FlowFinityGUI(QtWidgets.QDialog):
         self.instanced_mesh = None
         self.obstacles = []
         self.paths = []
+        # Variable to track the last FlowFinity node created, used to delete the node when the Apply button is pressed
+        self.lastFlowFinityNode = 0
         self.create_widgets()
         self.create_layout()
         self.create_connections()
@@ -294,17 +296,25 @@ class FlowFinityGUI(QtWidgets.QDialog):
 
     def run_flowfinity(self):
         # Delete the existing flowfinity node if it exists
-        if cmds.objExists("FlowfinityNode1"):
-            cmds.delete("FlowfinityNode1")
-        if cmds.objExists("instancer1"):
-            cmds.delete("instancer1")
+        if self.lastFlowFinityNode == 0:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Warning",
+                "There are no existing nodes to apply. Please create one first.",
+            )
+            return
+        if cmds.objExists("FlowfinityNode" + str(self.lastFlowFinityNode)):
+            cmds.delete("FlowfinityNode" + str(self.lastFlowFinityNode))
+        if cmds.objExists("instancer" + str(self.lastFlowFinityNode)):
+            cmds.delete("instancer" + str(self.lastFlowFinityNode))
+        self.lastFlowFinityNode -= 1
         self.create_flowfinity()
 
     def create_flowfinity(self):
         # Create a new node called "flowfinity"
-        print("starting to create flowfinity node")
 
         flowfinity_node = cmds.createNode("FlowFinityNode")
+        self.lastFlowFinityNode += 1
 
         cmds.connectAttr("time1.outTime", str(flowfinity_node) + ".currentTime")
 
@@ -321,15 +331,12 @@ class FlowFinityGUI(QtWidgets.QDialog):
                 force=True,
             )
 
-        print("Connected obstacle meshes")
-        print(len(self.paths))
         for index, path in enumerate(self.paths):
-            print(index, path.fullPath, path.name)
             cmds.connectAttr(
                 str(path.fullPath) + ".worldMatrix[0]",
                 str(flowfinity_node) + ".inOutFlows[{}]".format(index),
             )
-        print("Connected paths")
+
         # Connect the start and end times
         cmds.setAttr(
             str(flowfinity_node) + ".startTime", self.simulation_start_time.value()

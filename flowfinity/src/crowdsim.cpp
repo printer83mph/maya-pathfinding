@@ -34,50 +34,6 @@ CrowdSim::~CrowdSim() {}
 
 int CrowdSim::size() const { return m_rvoPos.size(); }
 
-// // Helper Line Intersection functions for obstacle detection
-
-// // Function to check if two doubles are nearly equal to avoid floating-point issues
-// bool almostEqual(double a, double b, double epsilon = 1e-6) { return std::fabs(a - b) < epsilon;
-// }
-
-// // Function to check if a point lies on an edge
-// bool isPointOnEdge(const glm::vec2& p, const Edge& edge)
-// {
-//   double minX = std::min(edge.point1.x, edge.point2.x);
-//   double maxX = std::max(edge.point1.x, edge.point2.x);
-//   double minY = std::min(edge.point1.y, edge.point2.y);
-//   double maxY = std::max(edge.point1.y, edge.point2.y);
-//   return (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY);
-// }
-
-// // Function to check if a line in the form of y = mx + b intersects with an edge
-// bool doesLineIntersectEdge(double m, double b, const Edge& edge)
-// {
-//   // Calculate the slope and intercept of the edge
-//   double dx = edge.point2.x - edge.point1.x;
-//   double dy = edge.point2.y - edge.point1.y;
-//   double edgeM = dy / dx;
-
-//   glm::vec2 intersection;
-
-//   // If both lines are vertical or both have the same slope, they are parallel
-//   if (almostEqual(dx, 0)) {
-//     // Edge is vertical
-//     intersection.x = edge.point1.x;
-//     intersection.y = m * intersection.x + b;
-//   } else if (almostEqual(m, edgeM)) {
-//     return false; // Parallel lines do not intersect
-//   } else {
-//     // Calculate the intersection point between y = mx + b and edge's line equation
-//     double edgeB = edge.point1.y - edgeM * edge.point1.x;
-//     intersection.x = (edgeB - b) / (m - edgeM);
-//     intersection.y = m * intersection.x + b;
-//   }
-
-//   // Check if the intersection point lies on the edge
-//   return isPointOnEdge(intersection, edge);
-// }
-
 void CrowdSim::importAgents(const std::vector<glm::vec2>& pos, const std::vector<glm::vec2>& vel,
                             const std::vector<glm::vec2>& currentTarget,
                             const std::vector<glm::vec2>& finalTarget)
@@ -137,6 +93,8 @@ void CrowdSim::performTimeStep(float dt)
       glm::vec2 dirFromOther = glm::normalize(m_rvoPos[i] - m_rvoPos[j]);
       if (dist < m_config.radius * 2.f) {
         m_rvoPos[i] += dirFromOther * (m_config.radius * 2.f - dist);
+        // Apply a velocity in the bump direction
+        m_rvoVel[i] += dirFromOther * 2.5f * dt;
 
         // Special case: if the agent is very close to their final target, then set velocity to 0 to
         // prevent blocking
@@ -239,9 +197,9 @@ void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
           if (hitCount % 2 == 1) {
             // Bump out
             glm::vec2 dirFromObstacle = glm::normalize(pos - obstacleCenter);
-            // pos += dirFromObstacle * 0.1f;
+            pos += dirFromObstacle * 0.1f;
             //  Apply a velocity in the bump direction
-            vel += dirFromObstacle * 1.1f;
+            vel += dirFromObstacle * 10.f * dt;
           }
         }
       }
