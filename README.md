@@ -1,23 +1,31 @@
 # FlowFinity Pathfinding for Maya
 
-This plugin allows...
-<!-- TODO -->
+This Maya plugin allows for the optimized simulation of pathfinding, collision-avoiding agents within complex scenes.
 
 ## Building
 
-Dependencies:
+Development dependencies:
 
-- SDL2
-- GLEW
+- CMake
+- Ninja
+- vcpkg
 
-This project uses git submodules. They will be automatically fetched by CMake when configuring.
-
-We use CMake to generate build files. To make a debug build with Ninja and generate `compile_commands.json` for tools like Clangd:
+Build dependencies are handled via `vcpkg`. Make sure you have it installed correctly (may already be installed with Visual Studio 17 2022). Then, to configure, run:
 
 ```sh
-cmake -B ./build -G "Ninja" -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug
+cmake --preset=Debug    # for a debug build
+cmake --preset=Release  # for a release build
 ```
 
-## Known Issues
+On Windows, you may have to run this within the "x64 Native Tools Command Prompt for VS..." for CMake to recognize the correct build toolchain.
 
-On Windows, something breaks when using Mingw64 and GCC to build, making our OpenGL engine render inconsistently. Building with Clang makes this work consistently for some reason.
+Then, to build, run:
+
+```sh
+cmake --build ./build_debug    # for a debug build
+cmake --build ./build_release  # for a release build
+```
+
+We provide the targets `flowfinity`, `flowfinityGl`, and `flowfinityMaya` for the base logic, the OpenGL test app and the Maya plugin respectively. `flowfinity` is a static library, allowing it to be embedded in other projects if desired.
+
+The resulting `.mll` file from the `flowfinityMaya` target will be generated at `build_<type>\flowfinity_maya\bin\flowfinityMaya.mll`. This can be placed in the `plug-ins` folder of your Maya devkit or Maya itself.
