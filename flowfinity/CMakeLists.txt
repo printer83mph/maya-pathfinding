@@ -5,6 +5,7 @@ set(SOURCES
   src/navigation/visibilitygraph.cpp
   src/navigation/obstacle.cpp
   src/util/graph.cpp
+  src/encoding.cpp
   src/crowdsim.cpp
   src/rvo.cpp
 )
@@ -14,6 +15,7 @@ set(HEADERS
   include/flowfinity/navigation/visibilitygraph.h
   include/flowfinity/navigation/obstacle.h
   include/flowfinity/util/graph.h
+  include/flowfinity/encoding.h
   include/flowfinity/crowdsim.h
   include/flowfinity/rvo.h
 )
@@ -32,3 +34,13 @@ target_include_directories(flowfinity PRIVATE
 target_link_libraries(flowfinity PUBLIC
 	glm::glm
 )
+
+add_executable(flowfinityTest)
+target_sources(flowfinityTest PRIVATE
+  test/main.cpp
+)
+# target_include_directories(flowfinityTest PRIVATE
+#   include
+#   ${GLM_INCLUDE_DIRS}
+# )
+target_link_libraries(flowfinityTest PRIVATE flowfinity)

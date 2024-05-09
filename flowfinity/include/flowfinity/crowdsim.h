@@ -1,6 +1,7 @@
 #pragma once
 
 #include "navigation/navmethod.h"
+#include "navigation/visibilitygraph.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
@@ -25,7 +26,7 @@ public:
     float aggressiveness = 25.f;
 
     // spawn/despawn logic
-    float spawnRate = .5f;
+    float spawnRate = 3.f;
     int maxAgents = 100;
 
     // Position pairs representing inflow and outflow for agents.

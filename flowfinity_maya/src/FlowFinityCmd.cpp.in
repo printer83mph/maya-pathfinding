@@ -9,8 +9,12 @@ FlowFinityCmd::FlowFinityCmd() : MPxCommand() {}
 
 FlowFinityCmd::~FlowFinityCmd() {}
 
-const char* python_GuiScript = R"(
-@FILE_CONTENT@
+const char* python_GuiScript1 = R"(
+@FILE1_CONTENT@
+)";
+
+const char* python_GuiScript2 = R"(
+@FILE2_CONTENT@
 )";
 
 MStatus FlowFinityCmd::doIt(const MArgList& args)
@@ -29,21 +33,8 @@ MStatus FlowFinityCmd::doIt(const MArgList& args)
   */
 
   // run the magic python command
-  MGlobal::executePythonCommand(python_GuiScript);
-
-  // All testing stuff : comment this and replace with running GUI with python script
-  // Get the selected objects
-  MSelectionList selection;
-  MGlobal::getActiveSelectionList(selection);
-
-  // Check if the selected object is an MnParticle
-  MObject selectedObject;
-  selection.getDependNode(0, selectedObject);
-  if (selectedObject.hasFn(MFn::kNParticle)) {
-    MGlobal::displayInfo("Selected");
-  } else {
-    MGlobal::displayInfo(selectedObject.apiTypeStr());
-  }
+  MGlobal::executePythonCommand(python_GuiScript1);
+  MGlobal::executePythonCommand(python_GuiScript2);
 
   return MStatus::kSuccess;
 }

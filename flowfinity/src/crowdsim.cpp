@@ -8,9 +8,9 @@
 #include "glm/gtc/constants.hpp"
 #include "glm/trigonometric.hpp"
 
+#include <glm/ext/vector_float2.hpp>
 #include <iostream>
 #include <iterator>
-#include <limits>
 #include <vector>
 
 CrowdSim::CrowdSim()
@@ -84,8 +84,8 @@ void CrowdSim::performTimeStep(float dt)
     m_rvoVel[i] += accel * dt;
     m_rvoPos[i] += m_rvoVel[i] * dt;
 
-#if 0
-    // if colliding, bump out
+// if colliding, bump out
+#if 1
     for (int j = 0; j < m_rvoPos.size(); ++j) {
       if (i == j)
         continue;
@@ -93,19 +93,26 @@ void CrowdSim::performTimeStep(float dt)
       glm::vec2 dirFromOther = glm::normalize(m_rvoPos[i] - m_rvoPos[j]);
       if (dist < m_config.radius * 2.f) {
         m_rvoPos[i] += dirFromOther * (m_config.radius * 2.f - dist);
+        // Apply a velocity in the bump direction
+        m_rvoVel[i] += dirFromOther * 2.5f * dt;
+
+        // Special case: if the agent is very close to their final target, then set velocity to 0 to
+        // prevent blocking
+        if (glm::distance(m_rvoPos[i], m_rvoFinalTarget[i]) < m_config.radius * 2.5f) {
+          m_rvoVel[i] = glm::vec2(0, 0);
+        }
       }
     }
 #endif
   }
 }
 
-#define BETA
 void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
 {
   // spawn agents
 #ifndef BETA
   if (m_config.inOutFlows.size() > 0 && size() < m_config.maxAgents) {
-    if ((float)std::rand() / (float)RAND_MAX < dt * 0.5f) {
+    if ((float)std::rand() / (float)RAND_MAX < dt * m_config.spawnRate) {
       // pick random inOutFlow pair
       int inOutFlowIdx =
           glm::floor((float)std::rand() / (float)RAND_MAX * m_config.inOutFlows.size());
@@ -121,9 +128,18 @@ void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
     auto currentTarget = m_rvoCurrentTarget.at(i);
     auto finalTarget = m_rvoFinalTarget.at(i);
 
+    // Special case, if not moving but close to final target, then despawn to prevent blocking
+    if (glm::length(m_rvoVel[i]) < 0.2f &&
+        glm::distance(pos, finalTarget) < m_config.radius * 10.5f) {
+#ifndef BETA
+      removeAgent(i);
+#endif
+      continue;
+    }
+
     if (glm::distance(pos, currentTarget) < 0.1f) {
       // Check if current target is final target (we've reached the end)
-      if (glm::distance(currentTarget, finalTarget) < 0.01f) {
+      if (glm::distance(currentTarget, finalTarget) < 0.45f) {
 #ifndef BETA
         removeAgent(i);
 #endif
@@ -143,6 +159,52 @@ void CrowdSim::performTimeStep(float dt, NavMethod* navMethod)
 
   // run physics
   performTimeStep(dt);
+
+  // Bump out from walls, only supported for visibilty graph navmethod
+  // Check if navmethod is visibility graph using dynamic cast
+  if (dynamic_cast<VisibilityGraph*>(navMethod)) {
+    auto vg = dynamic_cast<VisibilityGraph*>(navMethod);
+    for (int i = 0; i < m_rvoPos.size(); ++i) {
+      auto& pos = m_rvoPos[i];
+      auto& vel = m_rvoVel[i];
+      auto& target = m_rvoCurrentTarget[i];
+      auto& finalTarget = m_rvoFinalTarget[i];
+
+      // For each obstacle, check if the agent is within bounding box
+      for (auto& obstacle : vg->getObstacles()) {
+        auto& boundingBox = obstacle.getBoundingBox();
+        if (pos.x > boundingBox.x && pos.x < boundingBox.z && pos.y > boundingBox.y &&
+            pos.y < boundingBox.w) {
+          // Find obstacle center by taking median of bounding box
+
+          glm::vec2 obstacleCenter =
+              glm::vec2((boundingBox.x + boundingBox.z) / 2, (boundingBox.y + boundingBox.w) / 2);
+
+          // Ray cast to the center of the obstacle, count how many times we hit an edge
+          int hitCount = 0;
+          // Create an edge from the agent to the obstacle center, scaled to be longer by a factor
+          // of 9999
+          glm::vec2 edgeDir = glm::normalize(obstacleCenter - pos);
+          glm::vec2 edgeEnd = pos + edgeDir * 9999.f;
+          Edge m = {glm::vec3(pos.x, 0, pos.y), glm::vec3(edgeEnd.x, 0, edgeEnd.y)};
+          for (auto& edge : obstacle.getBounds()) {
+            if (Obstacle::intersects(m, edge)) {
+              ++hitCount;
+            }
+          }
+
+          // If we hit an odd number of edges, we are inside the obstacle
+          if (hitCount % 2 == 1) {
+            // Bump out
+            glm::vec2 dirFromObstacle = glm::normalize(pos - obstacleCenter);
+            pos += dirFromObstacle * 0.1f;
+            //  Apply a velocity in the bump direction
+            vel += dirFromObstacle * 10.f * dt;
+          }
+        }
+      }
+    }
+  }
 }
 
 void CrowdSim::addAgent(const glm::vec2& pos, const glm::vec2& target)
@@ -185,17 +247,16 @@ void CrowdSim::computeCurrentTarget(int index, NavMethod* navMethod)
   auto pos = m_rvoPos.at(index);
   auto path = navMethod->getPath(pos, m_rvoFinalTarget.at(index));
 
-  std::cout << path.size() << std::endl;
-
   int currentTargetIndex = 0;
-  while (glm::distance(pos, path.at(currentTargetIndex)) < 0.15 &&
-         currentTargetIndex <= path.size() - 1) {
+  while (currentTargetIndex <= path.size() - 1 &&
+         glm ::distance(pos, path.at(currentTargetIndex)) < 0.15) {
     ++currentTargetIndex;
   }
-
+  currentTargetIndex = glm::min(currentTargetIndex, (int)path.size() - 1);
   m_rvoCurrentTarget[index] = path.at(currentTargetIndex);
 }
 
+// #define BETA
 glm::vec2 CrowdSim::findOptimalAcceleration(int index, float dt) const
 {
   auto& posA = m_rvoPos[index];

@@ -2,8 +2,6 @@
 
 #include <maya/MPxNode.h>
 
-#include "flowfinity/navigation/visibilitygraph.h"
-
 class FlowFinityNode : public MPxNode
 {
 public:
@@ -22,16 +20,17 @@ public:
   static MObject agentDrag;
   static MObject agentRadius;
   static MObject agentAggressiveness;
-
-  // spawning params
   static MObject spawnRate;
   static MObject maxAgents;
+  static MObject obstacleTransforms;
+  static MObject inOutFlows;
+  static MObject startTime;
+  static MObject endTime;
 
-  // frame logic
-  static MObject startState;
-  static MObject currentState;
-  static MObject nextState;
+  // data storage + time for fetching agent data
+  static MObject simulationData;
   static MObject currentTime;
 
-  static VisibilityGraph m_visibilityGraph;
+  // output data for instancer node
+  static MObject outputPoints;
 };

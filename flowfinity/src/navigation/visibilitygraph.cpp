@@ -27,7 +27,7 @@ std::vector<glm::vec2> VisibilityGraph::getPath(const glm::vec2& start, const gl
 }
 
 void VisibilityGraph::addCubeObstacle(const glm::vec2& translation, const glm::vec2& scale,
-                                      float rotation)
+                                      float rotation, float radius)
 {
   // Default cube vertices
   std::vector<glm::vec2> pos_data{glm::vec2(-1, -1), glm::vec2(-1, 1), glm::vec2(1, 1),
@@ -40,7 +40,18 @@ void VisibilityGraph::addCubeObstacle(const glm::vec2& translation, const glm::v
 
   // Apply transformations to cube vertices
   for (int i = 0; i < 4; i++) {
-    pos_data[i] = (rot * scale_mat * pos_data[i]) + translation;
+    // Scale the cube first
+    pos_data[i] = (scale_mat * pos_data[i]);
+    // for each component of the pos data, if the component is less than -1 then subtract radius,
+    // otherwise add
+    pos_data[i].x = pos_data[i].x < 0 ? pos_data[i].x - radius : pos_data[i].x + radius;
+    pos_data[i].y = pos_data[i].y < 0 ? pos_data[i].y - radius : pos_data[i].y + radius;
+
+    // Rotate the cube
+    pos_data[i] = (rot * pos_data[i]);
+
+    // translate the cube
+    pos_data[i] += translation;
   }
 
   // Create obstacle from transformed cube vertices
